@@ -1,0 +1,24 @@
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Dependencias y compilados (envoltorio Android de la Fase 9)
+node_modules/
+dist/
+build/
+android/app/build/
+android/.gradle/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Temporales
+*.log
+*.tmp
