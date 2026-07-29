@@ -77,16 +77,14 @@ actualiza al instante, así que puedes cerrar el listado y seguir viendo cuál t
 
 **No se pueden usar desde el navegador.** Los tonos de fábrica de Android están en una
 carpeta protegida del sistema a la que ninguna página web tiene acceso: solo las
-aplicaciones nativas pueden leerlos.
+aplicaciones nativas pueden leerlos. Por eso la aplicación trae sus propios nueve.
 
-Tienes dos alternativas:
+Si quieres despertarte con un audio tuyo, usa el apartado **Canción**, que sí permite
+elegir un archivo de tu móvil o de tu ordenador.
 
-- **Importar tus propios archivos** con el botón *Añadir un tono mío* (llega en la Fase 5).
-  Si tienes tonos guardados en la carpeta `Ringtones` o `Sounds` del móvil, normalmente
-  aparecen en el selector de archivos y podrás usarlos. Los de fábrica, no.
-- **Esperar a la versión Android** de la Fase 10. Al dejar de ser una página web, la
-  aplicación sí puede pedirle al sistema la lista completa de tonos de alarma, timbres y
-  notificaciones del móvil.
+Y en la versión Android de la Fase 10 esto deja de ser un problema: al no ser ya una página
+web, la aplicación puede pedirle al sistema la lista completa de tonos de alarma, timbres y
+notificaciones del móvil.
 
 ### Canción
 

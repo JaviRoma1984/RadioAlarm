@@ -74,7 +74,7 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 2 | Modelo de datos y almacenamiento | Pendiente |
 | 3 | Pantalla principal con el listado de alarmas | Pendiente |
 | 4 | Editor de alarma | Pendiente |
-| 5 | Fuentes de sonido: tonos sintetizados, importar audio propio, canción y radio | Pendiente |
+| 5 | Fuentes de sonido: tonos sintetizados, canción y radio | Pendiente |
 | 6 | Motor de disparo y pantalla de alarma sonando | Pendiente |
 | 7 | Cronómetro y temporizador de cuenta atrás | Pendiente |
 | 8 | Convertirla en PWA instalable | Pendiente |

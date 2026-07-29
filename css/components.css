@@ -375,13 +375,6 @@
   color: var(--text-muted);
 }
 
-/* Acción secundaria al pie de un panel, separada de su contenido. */
-.panel__pie {
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-}
-
 /* --------------------------------------------------------------------------
    Recurso elegible (canción y emisora)
    -------------------------------------------------------------------------- */
