@@ -29,14 +29,15 @@ muestra un mensaje de bienvenida.
 **Botón flotante «Crear».** El círculo turquesa con el signo **+**, centrado justo encima
 de la barra inferior. Es la acción principal: crear una alarma nueva.
 
-**Barra inferior.** Las cuatro acciones secundarias:
+**Barra inferior.** Las cinco acciones secundarias:
 
-| Botón | Para qué sirve |
-|---|---|
-| **Crono** | Cronómetro y temporizador de cuenta atrás |
-| **Tono** | Elegir el tono de alarma clásico |
-| **Canción** | Elegir una canción de una carpeta tuya |
-| **Radio** | Elegir la emisora que sonará |
+| Botón | Icono | Para qué sirve |
+|---|---|---|
+| **Crono** | Cronómetro | Medir tiempo hacia adelante |
+| **Cuenta atrás** | Reloj de arena | Temporizador que avisa al llegar a cero |
+| **Tono** | Campana | Elegir el tono de alarma clásico |
+| **Canción** | Notas | Elegir una canción de una carpeta tuya |
+| **Radio** | Ondas | Elegir la emisora que sonará |
 
 En esta fase los botones están dibujados pero todavía no hacen nada: al pulsarlos aparece
 un aviso indicando en qué fase estarán disponibles.

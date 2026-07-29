@@ -55,15 +55,21 @@
   justify-content: center;
   gap: var(--space-1);
 
-  padding: var(--space-2) var(--space-1);
+  /* Alto fijo: así los rótulos de una y dos líneas no descuadran la barra. */
+  min-height: 3.5rem;
+  padding: var(--space-2) 2px;
   border-radius: var(--radius-md);
   color: var(--text-muted);
   background-color: var(--surface-2);
   border: 1px solid transparent;
 
-  font-size: var(--text-xs);
+  /* Con cinco columnas el rótulo baja a 11px y puede partirse en dos líneas
+     («Cuenta atrás» no cabe de una sola en pantallas estrechas). */
+  font-size: 0.6875rem;
   font-weight: var(--weight-medium);
-  line-height: 1;
+  line-height: 1.15;
+  text-align: center;
+  hyphens: auto;
 
   transition: color var(--dur-fast) var(--ease),
     background-color var(--dur-fast) var(--ease),
@@ -72,8 +78,8 @@
 }
 
 .bar-btn svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .bar-btn:hover {

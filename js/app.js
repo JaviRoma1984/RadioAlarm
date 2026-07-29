@@ -12,7 +12,8 @@ import { toast } from "./ui/toast.js";
 /** Acciones aún sin implementar, con su fase prevista. */
 const PENDIENTES = {
   "crear-alarma": "Crear alarmas llega en la Fase 4",
-  crono: "El cronómetro y el temporizador llegan en la Fase 7",
+  crono: "El cronómetro llega en la Fase 7",
+  "cuenta-atras": "El temporizador de cuenta atrás llega en la Fase 7",
   "elegir-tono": "La biblioteca de tonos llega en la Fase 5",
   "elegir-cancion": "Elegir canciones de tu carpeta llega en la Fase 5",
   "elegir-radio": "Las emisoras de radio llegan en la Fase 5",
