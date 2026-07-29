@@ -86,18 +86,49 @@
   transform: scale(0.96);
 }
 
-/* Acción principal: crear alarma. */
-.bar-btn--primary {
+/* --------------------------------------------------------------------------
+   Botón flotante de «Crear»
+   Acción principal de la app: círculo turquesa con un «+», centrado en
+   horizontal y flotando justo encima de la barra inferior.
+   -------------------------------------------------------------------------- */
+
+.fab {
+  position: fixed;
+  bottom: calc(var(--bar-espacio) + var(--space-3));
+  inset-inline: 0;
+  margin-inline: auto;
+  z-index: 30;
+
+  display: grid;
+  place-items: center;
+  width: var(--fab-size);
+  height: var(--fab-size);
+  border-radius: var(--radius-full);
+
   color: var(--text-on-accent);
   background-color: var(--accent);
-  box-shadow: var(--shadow-md);
-  font-weight: var(--weight-semibold);
+  /* Halo del color de fondo: separa el botón de la barra sin dibujar bordes. */
+  box-shadow:
+    0 0 0 4px var(--bg),
+    0 4px 14px rgb(15 26 23 / 0.22);
+
+  transition: background-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
 }
 
-.bar-btn--primary:hover {
-  color: var(--text-on-accent);
+.fab:hover {
   background-color: var(--accent-hover);
-  border-color: transparent;
+  transform: translateY(-2px);
+}
+
+.fab:active {
+  transform: scale(0.93);
+}
+
+.fab svg {
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -147,7 +178,8 @@
 .toast-zona {
   position: fixed;
   inset-inline: 0;
-  bottom: calc(var(--bar-height) + var(--space-4));
+  /* Por encima del botón flotante, para no quedar tapado por él. */
+  bottom: calc(var(--bar-espacio) + var(--fab-size) + var(--space-4));
   z-index: 40;
 
   display: flex;

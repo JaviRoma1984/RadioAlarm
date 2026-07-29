@@ -6,11 +6,13 @@
  */
 
 import { iniciarTema } from "./theme.js";
+import { iniciarMedidas } from "./ui/layout.js";
 import { toast } from "./ui/toast.js";
 
-/** Acciones de la barra inferior aún sin implementar, con su fase prevista. */
+/** Acciones aún sin implementar, con su fase prevista. */
 const PENDIENTES = {
   "crear-alarma": "Crear alarmas llega en la Fase 4",
+  crono: "El cronómetro y el temporizador llegan en la Fase 7",
   "elegir-tono": "La biblioteca de tonos llega en la Fase 5",
   "elegir-cancion": "Elegir canciones de tu carpeta llega en la Fase 5",
   "elegir-radio": "Las emisoras de radio llegan en la Fase 5",
@@ -29,7 +31,7 @@ function iniciarSombraCabecera() {
   window.addEventListener("scroll", actualizar, { passive: true });
 }
 
-/** Conecta los botones de la barra inferior. */
+/** Conecta el botón flotante y los botones de la barra inferior. */
 function iniciarBarraAcciones() {
   document.querySelectorAll("[data-accion]").forEach((boton) => {
     boton.addEventListener("click", () => {
@@ -44,6 +46,7 @@ function iniciar() {
     boton: document.getElementById("btn-tema"),
     etiqueta: document.getElementById("btn-tema-texto"),
   });
+  iniciarMedidas();
   iniciarSombraCabecera();
   iniciarBarraAcciones();
 }

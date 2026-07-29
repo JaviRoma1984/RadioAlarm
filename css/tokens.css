@@ -55,8 +55,15 @@
   --dur-slow: 320ms;
 
   /* --- Alturas de zonas fijas ------------------------------------------- */
-  --bar-height: 4.5rem;
+  /* `--bar-height` es solo el valor de reserva: en cuanto la app arranca,
+     `js/ui/layout.js` mide la barra real y publica `--bar-real`, que ya incluye
+     el margen del notch inferior del móvil. */
+  --bar-height: 4.75rem;
   --header-height: 3.5rem;
+  --bar-espacio: var(--bar-real, var(--bar-height));
+
+  /* Botón redondo flotante de «Crear» */
+  --fab-size: 3.5rem;
 
   /* --- Ancho de la columna de la app ----------------------------------- */
   /* Diseño «primero móvil»: en escritorio se centra como un panel estrecho. */

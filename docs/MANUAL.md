@@ -26,17 +26,20 @@ cmd /c mklink /J "C:\xampp\htdocs\RadioAlarm" "C:\Users\j-f-r\Documents\DEV\Repo
 **Zona central.** Aquí aparecerá el listado de tus alarmas. Mientras no tengas ninguna,
 muestra un mensaje de bienvenida.
 
-**Barra inferior.** Las cuatro acciones principales:
+**Botón flotante «Crear».** El círculo turquesa con el signo **+**, centrado justo encima
+de la barra inferior. Es la acción principal: crear una alarma nueva.
+
+**Barra inferior.** Las cuatro acciones secundarias:
 
 | Botón | Para qué sirve |
 |---|---|
-| **Crear** | Crear una alarma nueva |
+| **Crono** | Cronómetro y temporizador de cuenta atrás |
 | **Tono** | Elegir el tono de alarma clásico |
 | **Canción** | Elegir una canción de una carpeta tuya |
 | **Radio** | Elegir la emisora que sonará |
 
-En esta fase los cuatro botones están dibujados pero todavía no hacen nada: al pulsarlos
-aparece un aviso indicando en qué fase estarán disponibles.
+En esta fase los botones están dibujados pero todavía no hacen nada: al pulsarlos aparece
+un aviso indicando en qué fase estarán disponibles.
 
 ---
 
@@ -64,6 +67,7 @@ eliges un tema a mano, manda tu elección y deja de seguir al sistema.
 | 4 | Pantalla para crear y editar alarmas |
 | 5 | Tonos, canciones de tu carpeta y emisoras de radio |
 | 6 | Que la alarma suene de verdad, con posponer y vibración |
-| 7 | Instalarla en el móvil como aplicación |
-| 8 | Publicarla en GitHub Pages |
-| 9 | Versión Android que suena con el móvil bloqueado |
+| 7 | Cronómetro y temporizador de cuenta atrás |
+| 8 | Instalarla en el móvil como aplicación |
+| 9 | Publicarla en GitHub Pages |
+| 10 | Versión Android que suena con el móvil bloqueado |

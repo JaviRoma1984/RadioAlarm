@@ -70,9 +70,10 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 4 | Editor de alarma | Pendiente |
 | 5 | Fuentes de sonido: tono, canción y radio | Pendiente |
 | 6 | Motor de disparo y pantalla de alarma sonando | Pendiente |
-| 7 | Convertirla en PWA instalable | Pendiente |
-| 8 | Publicación en GitHub Pages y manual | Pendiente |
-| 9 | Envoltorio Android nativo (alarma con el móvil bloqueado) | Pendiente |
+| 7 | Cronómetro y temporizador de cuenta atrás | Pendiente |
+| 8 | Convertirla en PWA instalable | Pendiente |
+| 9 | Publicación en GitHub Pages y manual | Pendiente |
+| 10 | Envoltorio Android nativo (alarma con el móvil bloqueado) | Pendiente |
 
 ---
 
@@ -81,8 +82,8 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 Documentadas aquí desde el principio porque condicionan el diseño:
 
 - **Como web, la app debe permanecer abierta** para que la alarma suene. No existe una API
-  web fiable para programar un aviso futuro con todo cerrado. La Fase 7 lo mitiga
-  manteniendo audio de fondo, y la Fase 9 lo resuelve de verdad con el despertador nativo
+  web fiable para programar un aviso futuro con todo cerrado. La Fase 8 lo mitiga
+  manteniendo audio de fondo, y la Fase 10 lo resuelve de verdad con el despertador nativo
   de Android.
 - **En iPhone la fiabilidad es baja.** Safari suspende las apps en segundo plano de forma
   agresiva y Apple no ofrece a terceros un equivalente al despertador del sistema.
