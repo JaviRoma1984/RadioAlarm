@@ -1,6 +1,6 @@
 # Manual de RadioAlarm
 
-Este manual crece con cada fase del proyecto. Ahora mismo cubre las **fases 1 a 3** de 10.
+Este manual crece con cada fase del proyecto. Ahora mismo cubre las **fases 1 a 4** de 10.
 
 ---
 
@@ -46,12 +46,9 @@ indicando en qué fase estarán disponibles. **Sonido** ya funciona.
 
 ### Crear una alarma
 
-Pulsa el botón **+**. La alarma se crea con la **hora en punto siguiente a la actual**: si
-son las 15:20, se crea a las 16:00.
-
-> De momento no se puede elegir la hora ni el nombre al crearla. El editor completo —con
-> nombre, hora, días de la semana, sonido, vibración y pospuestos— llega en la **Fase 4**.
-> Hasta entonces el botón **+** sirve para poder probar el listado.
+Pulsa el botón **+**. Se abre el editor con la hora en punto siguiente a la actual ya
+puesta —si son las 15:20, empieza en 16:00— y el resto de opciones con sus valores
+habituales, listas para cambiar antes de guardar.
 
 ### Qué muestra cada alarma
 
@@ -79,12 +76,70 @@ se puede deshacer.
 
 ### Editar
 
-Al pulsar sobre una alarma se abrirá su editor. Llega en la **Fase 4**; por ahora avisa de
-ello.
+Al pulsar sobre una alarma se abre su editor, con todo lo que tenía puesto.
 
 ---
 
-## 4. Opciones de sonido
+## 4. Editor de alarma
+
+Se abre al **crear** una alarma nueva o al **pulsar sobre una** existente. Los cambios se
+llevan en un borrador: solo se guardan al pulsar **Guardar cambios**.
+
+### Nombre y hora
+
+Arriba de todo, el nombre —déjalo en blanco y se llamará «Alarma»— y debajo la hora, con el
+selector nativo del navegador o del móvil.
+
+### Repetición
+
+Dos opciones:
+
+- **Sonar una vez.** Suena la próxima vez que llegue esa hora y se desactiva sola.
+- **Personalizar.** Se despliega debajo un panel con los **7 días de la semana**. Toca los
+  días en que quieres que suene; puedes marcar tantos como quieras. Si no marcas ninguno,
+  la alarma se guarda pero no sonará —se avisa al guardar, y el listado la marca como *Sin
+  días marcados*—.
+
+### Sonido
+
+Tres pestañas: **Tono**, **Canción** y **Radio**.
+
+- **Tono** — la misma lista de nueve tonos de las opciones de sonido, con el mismo
+  comportamiento: suena al elegirlo y se resalta en amarillo.
+- **Canción** y **Radio** — todavía no se puede elegir el archivo ni la emisora; llega en
+  la **Fase 5**. Si guardas con una de estas dos pestañas puesta, la alarma se guarda con el
+  tono y te avisa de que la elección no se ha podido aplicar aún.
+
+Al abrir una alarma nueva, el tono de partida es el que tengas marcado como favorito en
+**Opciones de sonido** —lo configuras una vez y todas las alarmas nuevas parten de él—.
+Cada alarma puede cambiarlo después sin que afecte a las demás.
+
+### Vibración
+
+Un interruptor. Vibra el dispositivo mientras suena la alarma, en los dispositivos que lo
+permitan.
+
+### Posponer
+
+Dos contadores con botones **−** y **+**:
+
+- **Veces** — cuántas veces se puede posponer, de 0 a 10. Con 0, la alarma no ofrece
+  posponer al sonar.
+- **Minutos entre pospuestos** — cuánto tarda en volver a sonar tras posponerla, de 1 a 60.
+  Este contador se oculta si has puesto **Veces** a 0: no tiene sentido preguntarlo si no se
+  va a posponer nunca.
+
+### Guardar, volver y borrar
+
+- **Guardar cambios** — guarda la alarma y vuelve a la pantalla principal.
+- **Volver atrás** — vuelve sin guardar. Si tenías cambios pendientes, se descartan y te
+  avisa de ello.
+- **Borrar esta alarma** — solo aparece al editar una alarma ya existente, nunca al crear
+  una nueva. Pregunta antes de borrar.
+
+---
+
+## 5. Opciones de sonido
 
 Pulsa **Sonido** en la barra inferior. La zona central cambia y muestra tres apartados.
 El botón queda resaltado en turquesa mientras estás en esta pantalla.
@@ -165,7 +220,7 @@ Lo que guardes se mantiene al cerrar y volver a abrir la aplicación.
 
 ---
 
-## 5. Modo día y modo noche
+## 6. Modo día y modo noche
 
 Pulsa el botón redondo de la esquina superior derecha:
 
@@ -180,7 +235,7 @@ eliges un tema a mano, manda tu elección y deja de seguir al sistema.
 
 ---
 
-## 6. Dónde se guardan tus datos
+## 7. Dónde se guardan tus datos
 
 Todo lo que configuras —alarmas, tono elegido y modo día/noche— se guarda **en el propio
 navegador del dispositivo**, no en ningún servidor. Consecuencias prácticas:
@@ -196,7 +251,7 @@ navegador del dispositivo**, no en ningún servidor. Consecuencias prácticas:
 
 ---
 
-## 7. Qué falta por hacer
+## 8. Qué falta por hacer
 
 | Fase | Qué añadirá |
 |---|---|

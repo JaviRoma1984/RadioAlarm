@@ -48,12 +48,14 @@ RadioAlarm/
 │   │   ├── alarma.js   Esquema, saneado y cálculo del próximo disparo
 │   │   └── alarmas.js  Repositorio: altas, bajas y consultas
 │   └── ui/
-│       ├── vistas.js   Navegación entre pantallas
-│       ├── alarmas.js  Vista del listado de alarmas
-│       ├── sonido.js   Vista de opciones de sonido
-│       ├── plegable.js Listas que se despliegan y encogen
-│       ├── layout.js   Medidas de la barra inferior
-│       └── toast.js    Avisos flotantes
+│       ├── vistas.js      Navegación entre pantallas
+│       ├── alarmas.js     Vista del listado de alarmas
+│       ├── editor.js      Editor de alarma: crear y editar
+│       ├── sonido.js      Vista de opciones de sonido (tono favorito)
+│       ├── selectorTono.js  Widget de tono compartido por sonido.js y editor.js
+│       ├── plegable.js    Listas que se despliegan y encogen
+│       ├── layout.js      Medidas de la barra inferior
+│       └── toast.js       Avisos flotantes
 ├── tests/
 │   └── modelo.test.mjs Pruebas del modelo
 └── docs/
@@ -112,7 +114,7 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 1 | Esqueleto, tokens de diseño, tema día/noche y navegación entre vistas | ✅ Hecha |
 | 2 | Modelo de datos y almacenamiento | ✅ Hecha |
 | 3 | Pantalla principal con el listado de alarmas | ✅ Hecha |
-| 4 | Editor de alarma | Pendiente |
+| 4 | Editor de alarma | ✅ Hecha |
 | 5 | Fuentes de sonido: tonos sintetizados, canción y radio | 🟡 Los tonos ya suenan |
 | 6 | Motor de disparo y pantalla de alarma sonando | Pendiente |
 | 7 | Cronómetro y temporizador de cuenta atrás | Pendiente |

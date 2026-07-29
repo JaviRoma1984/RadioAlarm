@@ -8,20 +8,14 @@
  * vista. Aparte, un temporizador refresca solo la línea de «cuánto falta», sin
  * reconstruir nada más.
  *
- * Estado: el botón flotante crea una alarma con valores por defecto. La Fase 4
- * lo sustituirá por el editor completo, y entonces también funcionará el toque
- * sobre una tarjeta para editarla.
+ * El botón flotante y el toque sobre una tarjeta abren el editor de alarma
+ * (js/ui/editor.js): el primero para crear una nueva, el segundo para editarla.
  */
 
 import { nombreTono } from "../datos/tonos.js";
 import { FUENTE, proximoDisparo, resumenRepeticion, tiempoHasta } from "../model/alarma.js";
-import {
-  alCambiar,
-  alternarActiva,
-  borrarAlarma,
-  guardarAlarma,
-  listarAlarmas,
-} from "../model/alarmas.js";
+import { alCambiar, alternarActiva, borrarAlarma, listarAlarmas } from "../model/alarmas.js";
+import { abrirEditorAlarma, abrirEditorNuevo } from "./editor.js";
 import { toast } from "./toast.js";
 import { vistaActual } from "./vistas.js";
 
@@ -156,31 +150,6 @@ function actualizarTiempos() {
 /*  Acciones                                                                  */
 /* -------------------------------------------------------------------------- */
 
-/** Hora en punto siguiente a la actual, como valor de partida razonable. */
-function siguienteHoraEnPunto(ahora = new Date()) {
-  const fecha = new Date(ahora.getTime());
-  fecha.setHours(fecha.getHours() + 1, 0, 0, 0);
-  return `${String(fecha.getHours()).padStart(2, "0")}:00`;
-}
-
-/**
- * Crea una alarma con los valores por defecto.
- *
- * Provisional de la Fase 3: sirve para poder probar el listado antes de que
- * exista el editor. La Fase 4 sustituye esto por la pantalla de creación.
- */
-function crearAlarmaPorDefecto() {
-  const hora = siguienteHoraEnPunto();
-  const guardada = guardarAlarma({ nombre: "Alarma", hora });
-
-  if (!guardada) {
-    toast("No se pudo crear: el navegador bloquea el almacenamiento", { tipo: "error" });
-    return;
-  }
-
-  toast(`Alarma creada a las ${hora} · el editor llega en la Fase 4`);
-}
-
 function borrar(id) {
   const alarma = ultimas.find((otra) => otra.id === id);
   if (!alarma) return;
@@ -205,9 +174,7 @@ export function iniciarListaAlarmas() {
     if (!id) return;
 
     if (boton.dataset.accionAlarma === "borrar") borrar(id);
-    if (boton.dataset.accionAlarma === "editar") {
-      toast("El editor de alarmas llega en la Fase 4");
-    }
+    if (boton.dataset.accionAlarma === "editar") abrirEditorAlarma(id);
   });
 
   lista?.addEventListener("change", (evento) => {
@@ -217,7 +184,7 @@ export function iniciarListaAlarmas() {
     if (id) alternarActiva(id); // el repositorio avisa y la lista se repinta
   });
 
-  document.getElementById("fab-crear")?.addEventListener("click", crearAlarmaPorDefecto);
+  document.getElementById("fab-crear")?.addEventListener("click", abrirEditorNuevo);
 
   alCambiar(pintarLista);
 

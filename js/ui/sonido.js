@@ -1,19 +1,22 @@
 /**
  * RadioAlarm · Vista de opciones de sonido
  *
- * Aquí se eligen las tres fuentes que podrá usar una alarma: el tono, la
- * canción y la emisora. Los cambios se llevan en un borrador y solo se
- * persisten al pulsar «Guardar cambios»; «Volver atrás» los descarta.
+ * Esta pantalla configura el sonido *favorito*: el tono, la canción y la
+ * emisora de las que parte una alarma nueva. Cada alarma puede luego cambiarlo
+ * en su propio editor (Fase 4) sin afectar a este favorito global.
  *
- * Estado: la selección de tono ya es real y se guarda. La elección de canción y
- * de emisora necesita el selector de archivos y el reproductor de streams, que
- * llegan en la Fase 5.
+ * Los cambios se llevan en un borrador y solo se persisten al pulsar «Guardar
+ * cambios»; «Volver atrás» los descarta.
+ *
+ * Estado: la selección de tono ya es real, suena al elegirla y se guarda. La
+ * elección de canción y de emisora necesita el selector de archivos y el
+ * reproductor de streams, que llegan en la Fase 5.
  */
 
-import { pararTono, reproducirTono } from "../audio/sintetizador.js";
-import { TONOS, TONO_POR_DEFECTO, existeTono, nombreTono } from "../datos/tonos.js";
+import { TONO_POR_DEFECTO, existeTono, nombreTono } from "../datos/tonos.js";
 import { leer, escribir } from "../store.js";
 import { crearPlegable } from "./plegable.js";
+import { crearSelectorTono } from "./selectorTono.js";
 import { toast } from "./toast.js";
 import { volverAlInicio } from "./vistas.js";
 
@@ -56,89 +59,22 @@ let hayCambios = false;
 /** Plegable de la lista de tonos; se crea la primera vez que se pinta. */
 let plegableTonos = null;
 
-/** Temporizador que retira la marca de «suena ahora». */
-let finDeMuestra = null;
-
-/** Última muestra lanzada, para no repetirla por un mismo clic. */
-let ultimaMuestra = { id: null, momento: 0 };
-
-/** Margen en el que se considera que dos peticiones son el mismo gesto. */
-const MISMO_GESTO_MS = 150;
-
-/**
- * Reproduce el tono elegido y lo marca mientras suena.
- *
- * Se llama desde el gesto de selección del usuario, que es lo que permite al
- * navegador arrancar el audio.
- *
- * Un `<label>` reenvía el clic al `<input>` que envuelve, así que una sola
- * pulsación puede llegar aquí dos veces —por `change` y por `click`—. La guarda
- * de tiempo evita que el tono se corte y vuelva a empezar.
- */
-function escucharTono(id, opcion) {
-  const ahora = performance.now();
-  if (ultimaMuestra.id === id && ahora - ultimaMuestra.momento < MISMO_GESTO_MS) return;
-  ultimaMuestra = { id, momento: ahora };
-
-  clearTimeout(finDeMuestra);
-  document
-    .querySelectorAll('.opcion[data-sonando="true"]')
-    .forEach((otra) => delete otra.dataset.sonando);
-
-  const duracion = reproducirTono(id);
-  if (!duracion) return; // navegador sin Web Audio: la selección funciona igual
-
-  opcion.dataset.sonando = "true";
-  finDeMuestra = setTimeout(
-    () => delete opcion.dataset.sonando,
-    duracion * 1000,
-  );
-}
-
-/** Silencia la muestra y quita la marca. Al salir de la vista o al guardar. */
-function silenciarMuestra() {
-  clearTimeout(finDeMuestra);
-  pararTono();
-  document
-    .querySelectorAll('.opcion[data-sonando="true"]')
-    .forEach((opcion) => delete opcion.dataset.sonando);
-}
+/** El propio grupo de radios necesita un `name` que no choque con el del editor. */
+const selectorTono = crearSelectorTono({
+  contenedor: document.getElementById("lista-tonos"),
+  name: "sonido-tono",
+  onCambiar(id) {
+    borrador.tono = id;
+    pintarRecursos(); // refleja el cambio en la línea del tono elegido
+    marcarCambios();
+  },
+});
 
 function pintarTonos() {
   const lista = document.getElementById("lista-tonos");
   if (!lista) return;
 
-  lista.replaceChildren(
-    ...TONOS.map((tono) => {
-      const etiqueta = document.createElement("label");
-      etiqueta.className = "opcion";
-      etiqueta.innerHTML = `
-        <input type="radio" name="tono" value="${tono.id}" class="opcion__radio" />
-        <span class="opcion__marca" aria-hidden="true"></span>
-        <span class="opcion__texto">
-          <span class="opcion__nombre">${tono.nombre}</span>
-          <span class="opcion__desc">${tono.descripcion}</span>
-        </span>
-      `;
-
-      const radio = etiqueta.querySelector("input");
-      radio.checked = tono.id === borrador.tono;
-      radio.addEventListener("change", () => {
-        borrador.tono = tono.id;
-        pintarRecursos(); // refleja el cambio en la línea del tono elegido
-        marcarCambios();
-        escucharTono(tono.id, etiqueta);
-      });
-
-      // Volver a pulsar el que ya está elegido no dispara `change`, pero se
-      // espera oírlo otra vez.
-      etiqueta.addEventListener("click", () => {
-        if (radio.checked && borrador.tono === tono.id) escucharTono(tono.id, etiqueta);
-      });
-
-      return etiqueta;
-    }),
-  );
+  selectorTono.pintar(borrador.tono);
 
   plegableTonos ??= crearPlegable({
     contenedor: lista,
@@ -190,7 +126,7 @@ export function refrescarSonido() {
 /* -------------------------------------------------------------------------- */
 
 function guardar() {
-  silenciarMuestra();
+  selectorTono.silenciar();
 
   if (!hayCambios) {
     toast("No había cambios que guardar");
@@ -213,7 +149,7 @@ function guardar() {
 }
 
 function volver() {
-  silenciarMuestra();
+  selectorTono.silenciar();
   if (hayCambios) toast("Cambios sin guardar descartados", { tipo: "aviso" });
   refrescarSonido();
   volverAlInicio();
@@ -229,6 +165,6 @@ export function iniciarSonido() {
   // se corta cualquier tono de muestra que siguiera sonando.
   document.addEventListener("vista:cambiada", (evento) => {
     if (evento.detail.vista === "sonido") refrescarSonido();
-    else silenciarMuestra();
+    else selectorTono.silenciar();
   });
 }

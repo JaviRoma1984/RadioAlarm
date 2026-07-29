@@ -1,12 +1,13 @@
 /**
  * RadioAlarm · Punto de entrada
  *
- * Estado del proyecto: Fase 3 de 10 — listado de alarmas en marcha. El editor
- * completo llega en la Fase 4 y el motor que las hace sonar, en la Fase 6.
+ * Estado del proyecto: Fase 4 de 10 — listado y editor de alarma completos. El
+ * motor que las hace sonar llega en la Fase 6.
  */
 
 import { iniciarTema } from "./theme.js";
 import { iniciarListaAlarmas } from "./ui/alarmas.js";
+import { iniciarEditor } from "./ui/editor.js";
 import { iniciarMedidas } from "./ui/layout.js";
 import { iniciarSonido } from "./ui/sonido.js";
 import { toast } from "./ui/toast.js";
@@ -52,6 +53,7 @@ function iniciar() {
   iniciarSombraCabecera();
   iniciarListaAlarmas();
   iniciarSonido();
+  iniciarEditor();
   iniciarVistas();
   iniciarAccionesPendientes();
 }
