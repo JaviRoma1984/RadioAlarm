@@ -1,0 +1,150 @@
+/* ==========================================================================
+   RadioAlarm · Tokens de diseño
+   --------------------------------------------------------------------------
+   Paleta corporativa AXPA365:
+     · Turquesa #1DB89A → acento principal (acciones, alarmas activas)
+     · Amarillo #F5C200 → acento secundario (alarma sonando, avisos)
+
+   Los tokens de marca no cambian entre temas. Los tokens semánticos
+   (superficies, textos, bordes) se redefinen en [data-theme="dark"].
+   ========================================================================== */
+
+:root {
+  /* --- Marca ------------------------------------------------------------ */
+  --brand-turquoise: #1db89a;
+  --brand-yellow: #f5c200;
+
+  /* --- Tipografía ------------------------------------------------------- */
+  --font-sans: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --text-xs: 0.75rem;   /* 12px · etiquetas de los días, metadatos */
+  --text-sm: 0.8125rem; /* 13px · textos secundarios */
+  --text-md: 0.9375rem; /* 15px · cuerpo */
+  --text-lg: 1.125rem;  /* 18px · títulos de sección */
+  --text-xl: 1.5rem;    /* 24px · títulos de pantalla */
+  --text-clock: 2.5rem; /* 40px · hora de la alarma en el listado */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+
+  /* --- Espaciado (escala de 4px) ---------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* --- Radios ----------------------------------------------------------- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 999px;
+
+  /* --- Movimiento ------------------------------------------------------- */
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  /* --- Alturas de zonas fijas ------------------------------------------- */
+  /* `--bar-height` es solo el valor de reserva: en cuanto la app arranca,
+     `js/ui/layout.js` mide la barra real y publica `--bar-real`, que ya incluye
+     el margen del notch inferior del móvil. */
+  --bar-height: 4.75rem;
+  --header-height: 3.5rem;
+  --bar-espacio: var(--bar-real, var(--bar-height));
+
+  /* Botón redondo flotante de «Crear» */
+  --fab-size: 3.5rem;
+
+  /* --- Ancho de la columna de la app ----------------------------------- */
+  /* Diseño «primero móvil»: en escritorio se centra como un panel estrecho. */
+  --app-width: 30rem;
+}
+
+/* ==========================================================================
+   Tema día (por defecto)
+   ========================================================================== */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f4f7f6;
+  --bg-glow: rgb(29 184 154 / 0.14);
+
+  --surface: #ffffff;
+  --surface-2: #eef2f1;
+  --surface-sunken: #e7ecea;
+
+  --text: #0f1a17;
+  --text-muted: #5b6b66;
+  --text-faint: #8b9a95;
+  --text-on-accent: #04211b;
+
+  --border: #e0e6e4;
+  --border-strong: #cbd5d2;
+
+  --accent: #109e83;
+  --accent-hover: #0d8a72;
+  --accent-soft: rgb(29 184 154 / 0.12);
+  --accent-ring: rgb(29 184 154 / 0.35);
+
+  --warn: #b98600;
+  --warn-soft: rgb(245 194 0 / 0.16);
+
+  --danger: #c2382c;
+  --danger-soft: rgb(194 56 44 / 0.1);
+
+  --shadow-sm: 0 1px 2px rgb(15 26 23 / 0.06), 0 1px 3px rgb(15 26 23 / 0.04);
+  --shadow-md: 0 2px 8px rgb(15 26 23 / 0.08), 0 1px 3px rgb(15 26 23 / 0.05);
+  --shadow-lg: 0 -2px 16px rgb(15 26 23 / 0.07);
+}
+
+/* ==========================================================================
+   Tema noche
+   El turquesa se aclara ligeramente para mantener el contraste sobre fondos
+   oscuros; el amarillo corporativo ya contrasta bien tal cual.
+   ========================================================================== */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0b1210;
+  --bg-glow: rgb(29 184 154 / 0.1);
+
+  --surface: #141e1b;
+  --surface-2: #1c2825;
+  --surface-sunken: #0f1817;
+
+  --text: #e9f1ef;
+  --text-muted: #93a7a1;
+  --text-faint: #6b7f7a;
+  --text-on-accent: #04211b;
+
+  --border: #253431;
+  --border-strong: #354743;
+
+  --accent: #2fd3b3;
+  --accent-hover: #4ce0c3;
+  --accent-soft: rgb(47 211 179 / 0.14);
+  --accent-ring: rgb(47 211 179 / 0.4);
+
+  --warn: #f5c200;
+  --warn-soft: rgb(245 194 0 / 0.14);
+
+  --danger: #ff6b5c;
+  --danger-soft: rgb(255 107 92 / 0.12);
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 2px 10px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 -2px 18px rgb(0 0 0 / 0.5);
+}

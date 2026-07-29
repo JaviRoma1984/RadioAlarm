@@ -1,0 +1,551 @@
+/* ==========================================================================
+   RadioAlarm · Componentes
+   Piezas reutilizables por el resto de la app: botones, estado vacío y avisos.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Botón de icono (usado por el conmutador día/noche)
+   -------------------------------------------------------------------------- */
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.icon-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent-ring);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+.icon-btn svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+/* Solo se muestra el icono que corresponde al tema que se puede activar:
+   en modo día se ve la luna (ir a noche) y en modo noche se ve el sol. */
+[data-theme="light"] .icon-btn__sol,
+[data-theme="dark"] .icon-btn__luna {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Botones de la barra inferior
+   -------------------------------------------------------------------------- */
+
+.bar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+
+  /* Alto fijo: así los rótulos de una y dos líneas no descuadran la barra. */
+  min-height: 3.5rem;
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  background-color: var(--surface-2);
+  border: 1px solid transparent;
+
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: 1.15;
+  text-align: center;
+
+  transition: color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.bar-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* En modo día los botones llevan un perfilado turquesa fino: sobre fondo claro
+   el relleno gris solo no los delimita bien. En modo noche no hace falta, el
+   contraste del propio relleno ya los separa del fondo.
+   El borde es de 1px (el trazo más fino que dibuja un navegador de forma
+   nítida); para que se lea como una raya fina y no como un marco, el turquesa
+   va al 55 %. */
+[data-theme="light"] .bar-btn {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.bar-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.bar-btn:active {
+  transform: scale(0.96);
+}
+
+/* Vista abierta ahora mismo. */
+.bar-btn--activo {
+  color: var(--accent);
+  border-color: var(--accent);
+  background-color: var(--accent-soft);
+  font-weight: var(--weight-semibold);
+}
+
+/* --------------------------------------------------------------------------
+   Botón flotante de «Crear»
+   Acción principal de la app: círculo turquesa con un «+», centrado en
+   horizontal y flotando justo encima de la barra inferior.
+   -------------------------------------------------------------------------- */
+
+.fab {
+  position: fixed;
+  bottom: calc(var(--bar-espacio) + var(--space-3));
+  inset-inline: 0;
+  margin-inline: auto;
+  z-index: 30;
+
+  display: grid;
+  place-items: center;
+  width: var(--fab-size);
+  height: var(--fab-size);
+  border-radius: var(--radius-full);
+
+  color: var(--text-on-accent);
+  background-color: var(--accent);
+  /* Halo del color de fondo: separa el botón de la barra sin dibujar bordes. */
+  box-shadow:
+    0 0 0 4px var(--bg),
+    0 4px 14px rgb(15 26 23 / 0.22);
+
+  transition: background-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
+}
+
+.fab:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+.fab:active {
+  transform: scale(0.93);
+}
+
+.fab svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* --------------------------------------------------------------------------
+   Estado vacío
+   -------------------------------------------------------------------------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  padding: var(--space-7) var(--space-4);
+}
+
+.empty__icon {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-full);
+  color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.empty__icon svg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.empty__title {
+  font-size: var(--text-xl);
+  letter-spacing: -0.02em;
+}
+
+.empty__text {
+  max-width: 22rem;
+  font-size: var(--text-md);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Vistas y paneles
+   Cada pantalla de la app es una `.vista`; dentro se agrupa el contenido en
+   tarjetas `.panel`.
+   -------------------------------------------------------------------------- */
+
+.vista {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.vista__titulo {
+  font-size: var(--text-xl);
+  letter-spacing: -0.02em;
+}
+
+.panel {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--dur-base) var(--ease),
+    border-color var(--dur-base) var(--ease);
+}
+
+.panel__titulo {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-lg);
+}
+
+/* Fila de título con una acción a la derecha (el botón de desplegar). */
+.panel__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.panel__cabecera .panel__titulo {
+  margin-bottom: 0;
+}
+
+/* Botón de desplegar / encoger una lista. */
+.btn-plegar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  color: var(--accent);
+  background-color: var(--accent-soft);
+  border: 1px solid transparent;
+
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+
+  transition: border-color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease);
+}
+
+.btn-plegar:hover {
+  border-color: var(--accent);
+}
+
+.btn-plegar svg {
+  width: 1rem;
+  height: 1rem;
+  transition: transform var(--dur-base) var(--ease);
+}
+
+.btn-plegar[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.panel__ayuda {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Opción seleccionable (lista de tonos)
+   El `<input type="radio">` real se mantiene en el DOM, oculto: así funcionan
+   el teclado, las flechas y los lectores de pantalla sin código extra.
+   -------------------------------------------------------------------------- */
+
+.opciones {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* El alto en píxeles lo pone `js/ui/plegable.js`; aquí solo se recorta y anima.
+   La separación superior va como relleno propio y no como margen: con la lista
+   cerrada queda recortada por `overflow`, así que no deja un hueco vacío. */
+.opciones--plegable {
+  overflow: hidden;
+  padding-top: var(--space-3);
+  transition: max-height var(--dur-slow) var(--ease);
+}
+
+.opcion {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.opcion:hover {
+  border-color: var(--accent);
+}
+
+.opcion:has(.opcion__radio:checked) {
+  background-color: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.opcion:has(.opcion__radio:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.opcion__radio {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.opcion__marca {
+  display: grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--border-strong);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.opcion:has(.opcion__radio:checked) .opcion__marca {
+  border-color: var(--accent);
+}
+
+.opcion__marca::after {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: var(--radius-full);
+  background-color: var(--accent);
+  transform: scale(0);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.opcion:has(.opcion__radio:checked) .opcion__marca::after {
+  transform: scale(1);
+}
+
+.opcion__texto {
+  display: grid;
+}
+
+.opcion__nombre {
+  font-weight: var(--weight-semibold);
+}
+
+.opcion__desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Recurso elegible (canción y emisora)
+   -------------------------------------------------------------------------- */
+
+.recurso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+/* Rótulo a la izquierda de la fila; el valor queda alineado a la derecha. */
+.recurso__etiqueta {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.recurso__valor {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Cuando la fila lleva rótulo, el valor es el protagonista. */
+.recurso__etiqueta + .recurso__valor {
+  font-weight: var(--weight-semibold);
+  text-align: right;
+}
+
+.recurso__valor--vacio {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Botones
+   -------------------------------------------------------------------------- */
+
+.btn {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+
+  transition: color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn--primario {
+  color: var(--text-on-accent);
+  background-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--primario:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn--secundario {
+  color: var(--text);
+  background-color: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+.btn--secundario:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Variante compacta, para acciones dentro de un panel. */
+.btn--suave {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.btn--suave:hover {
+  border-color: var(--accent);
+}
+
+/* Hay cambios sin guardar: se señala con el amarillo corporativo. */
+.btn--pendiente {
+  box-shadow: 0 0 0 2px var(--warn);
+}
+
+/* Fila de acciones al pie de una vista. */
+.acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+/* --------------------------------------------------------------------------
+   Avisos flotantes (toast)
+   -------------------------------------------------------------------------- */
+
+.toast-zona {
+  position: fixed;
+  inset-inline: 0;
+  /* Por encima del botón flotante, para no quedar tapado por él. */
+  bottom: calc(var(--bar-espacio) + var(--fab-size) + var(--space-4));
+  z-index: 40;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+
+  padding-inline: var(--space-4);
+  pointer-events: none;
+}
+
+.toast {
+  max-width: calc(var(--app-width) - var(--space-6));
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-full);
+
+  color: var(--text);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+
+  font-size: var(--text-sm);
+  text-align: center;
+
+  animation: toast-entra var(--dur-slow) var(--ease);
+}
+
+.toast[data-saliendo="true"] {
+  animation: toast-sale var(--dur-base) var(--ease) forwards;
+}
+
+.toast--aviso {
+  color: var(--warn);
+  background-color: var(--warn-soft);
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+}
+
+.toast--error {
+  color: var(--danger);
+  background-color: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+@keyframes toast-entra {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.96);
+  }
+}
+
+@keyframes toast-sale {
+  to {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.97);
+  }
+}

@@ -1,0 +1,204 @@
+/* ==========================================================================
+   RadioAlarm · Reinicio, tipografía y estructura de la página
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--text);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+
+  /* Resplandor turquesa muy tenue en la parte superior. */
+  background-image: radial-gradient(
+    120% 45% at 50% 0%,
+    var(--bg-glow) 0%,
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+
+  /* La app no hace scroll horizontal ni rebota lateralmente. */
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+
+  transition: background-color var(--dur-base) var(--ease),
+    color var(--dur-base) var(--ease);
+}
+
+h1,
+h2,
+h3 {
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-semibold);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Los números de hora se alinean en columna (evita el baile de dígitos). */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* `hidden` tiene que poder con cualquier `display` que traiga el componente:
+   así es como se ocultan las vistas que no están activas. */
+[hidden] {
+  display: none !important;
+}
+
+/* --- Accesibilidad -------------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Oculto visualmente pero legible por lectores de pantalla. */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   Estructura: cabecera fija · contenido con scroll · barra inferior fija
+   ========================================================================== */
+
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100dvh;
+  max-width: var(--app-width);
+  margin-inline: auto;
+}
+
+/* --- Cabecera ------------------------------------------------------------- */
+
+.app__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--header-height);
+  padding: var(--space-2) var(--space-4);
+  padding-top: max(var(--space-2), env(safe-area-inset-top));
+
+  background-color: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+
+  transition: border-color var(--dur-base) var(--ease);
+}
+
+/* El borde solo aparece cuando el contenido se ha desplazado. */
+.app__header[data-desplazado="true"] {
+  border-bottom-color: var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.brand__mark {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.brand__name {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.015em;
+}
+
+.brand__name span {
+  color: var(--accent);
+}
+
+/* --- Contenido ------------------------------------------------------------ */
+
+.app__main {
+  padding: var(--space-4);
+  /* Deja hueco para que ni la barra inferior ni el botón flotante tapen el
+     último elemento del listado. */
+  padding-bottom: calc(var(--bar-espacio) + var(--fab-size) + var(--space-4));
+}
+
+/* --- Barra inferior de acciones ------------------------------------------ */
+
+.app__bar {
+  position: fixed;
+  bottom: 0;
+  /* `inset-inline: 0` + margen automático mantiene la barra centrada bajo la
+     columna de la app también en escritorio. */
+  inset-inline: 0;
+  margin-inline: auto;
+  z-index: 20;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  width: 100%;
+  max-width: var(--app-width);
+  padding: var(--space-3) var(--space-3);
+  padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+
+  background-color: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+
+  transition: background-color var(--dur-base) var(--ease),
+    border-color var(--dur-base) var(--ease);
+}

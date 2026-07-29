@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>RadioAlarm</title>
+    <meta
+      name="description"
+      content="Despertador que suena con un tono, una canción tuya o una emisora de radio."
+    />
+    <meta name="theme-color" content="#1db89a" />
+
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+
+    <script>
+      /* Aplica el tema guardado antes del primer pintado para que no se vea
+         el destello blanco al abrir la app en modo noche. */
+      (() => {
+        try {
+          const guardado = localStorage.getItem("radioalarm.tema");
+          const prefiereOscuro = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.dataset.theme =
+            guardado === "light" || guardado === "dark"
+              ? guardado
+              : prefiereOscuro
+                ? "dark"
+                : "light";
+        } catch {
+          /* Si localStorage está bloqueado, se queda el tema día por defecto. */
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div class="app">
+      <!-- ================= Cabecera ================= -->
+      <header class="app__header" id="cabecera">
+        <div class="brand">
+          <svg
+            class="brand__mark"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <!-- Patas del despertador en amarillo corporativo -->
+            <path d="M4.5 4 7 6.2M19.5 4 17 6.2" stroke="var(--brand-yellow)" />
+            <!-- Esfera y aguja en turquesa corporativo -->
+            <circle cx="12" cy="13.5" r="7.5" stroke="var(--brand-turquoise)" />
+            <path d="M12 10v3.5l2.25 1.5" stroke="var(--brand-turquoise)" />
+          </svg>
+          <h1 class="brand__name">Radio<span>Alarm</span></h1>
+        </div>
+
+        <button class="icon-btn" id="btn-tema" type="button" aria-live="polite">
+          <span class="solo-lectores" id="btn-tema-texto">Cambiar a modo noche</span>
+          <!-- Luna: visible en modo día (pulsar → noche) -->
+          <svg
+            class="icon-btn__luna"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />
+          </svg>
+          <!-- Sol: visible en modo noche (pulsar → día) -->
+          <svg
+            class="icon-btn__sol"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="4.5" />
+            <path
+              d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"
+            />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ================= Contenido ================= -->
+      <main class="app__main">
+        <!-- ---------- Vista: listado de alarmas ---------- -->
+        <!-- Fase 3 sustituirá este estado vacío por el listado real. -->
+        <section class="vista" data-vista="alarmas" aria-label="Mis alarmas">
+          <div class="empty">
+            <div class="empty__icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4.5 4 7 6.2M19.5 4 17 6.2" />
+                <circle cx="12" cy="13.5" r="7.5" />
+                <path d="M12 10v3.5l2.25 1.5" />
+              </svg>
+            </div>
+            <h2 class="empty__title">Todavía no tienes alarmas</h2>
+            <p class="empty__text">
+              Crea tu primera alarma y elige si quiere despertarte con un tono, una canción
+              tuya o una emisora de radio.
+            </p>
+          </div>
+        </section>
+
+        <!-- ---------- Vista: opciones de sonido ---------- -->
+        <section class="vista" data-vista="sonido" aria-label="Opciones de sonido" hidden>
+          <h2 class="vista__titulo">Opciones de sonido</h2>
+
+          <section class="panel">
+            <div class="panel__cabecera">
+              <h3 class="panel__titulo">Tono</h3>
+              <button
+                class="btn-plegar"
+                type="button"
+                id="btn-plegar-tonos"
+                aria-expanded="false"
+                aria-controls="lista-tonos"
+              >
+                <span id="btn-plegar-tonos-texto">Explorar tonos</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.25"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9.5 6 6 6-6" />
+                </svg>
+              </button>
+            </div>
+            <p class="panel__ayuda">
+              El timbre que suena si no eliges canción ni emisora. Los nueve van incluidos
+              en la aplicación; los tonos de fábrica del móvil no son accesibles desde el
+              navegador.
+            </p>
+            <!-- Tono elegido: visible también con la lista cerrada. -->
+            <div class="recurso">
+              <span class="recurso__etiqueta">Tono elegido</span>
+              <span class="recurso__valor" id="valor-tono">Clásico</span>
+            </div>
+            <div
+              class="opciones opciones--plegable"
+              id="lista-tonos"
+              role="radiogroup"
+              aria-label="Tono"
+            ></div>
+          </section>
+
+          <section class="panel">
+            <h3 class="panel__titulo">Canción</h3>
+            <p class="panel__ayuda">Un archivo de audio de una carpeta tuya.</p>
+            <div class="recurso">
+              <span class="recurso__valor" id="valor-cancion">Ninguna seleccionada</span>
+              <button class="btn btn--suave" type="button" data-accion="elegir-cancion">
+                Elegir
+              </button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3 class="panel__titulo">Emisora de radio</h3>
+            <p class="panel__ayuda">Sonará en directo en cuanto salte la alarma.</p>
+            <div class="recurso">
+              <span class="recurso__valor" id="valor-emisora">Ninguna seleccionada</span>
+              <button class="btn btn--suave" type="button" data-accion="elegir-radio">
+                Elegir
+              </button>
+            </div>
+          </section>
+
+          <div class="acciones">
+            <button class="btn btn--secundario" type="button" id="btn-volver-sonido">
+              Volver atrás
+            </button>
+            <button class="btn btn--primario" type="button" id="btn-guardar-sonido">
+              Guardar cambios
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <!-- ================= Barra de acciones ================= -->
+      <nav class="app__bar" aria-label="Acciones principales">
+        <button
+          class="bar-btn"
+          type="button"
+          data-accion="crono"
+          aria-label="Cronómetro"
+          title="Cronómetro"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="13.5" r="7.5" />
+            <path d="M12 9.75v3.75l2.5 1.5" />
+            <path d="M10 2.75h4M12 2.75V6" />
+            <path d="M18.9 6.6l1.4-1.4" />
+          </svg>
+          <span>Crono</span>
+        </button>
+
+        <button
+          class="bar-btn"
+          type="button"
+          data-accion="cuenta-atras"
+          aria-label="Temporizador de cuenta atrás"
+          title="Temporizador de cuenta atrás"
+        >
+          <!-- Reloj de arena: distingue la cuenta atrás del cronómetro. -->
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M7 3h10M7 21h10" />
+            <path d="M8 3v3.2c0 1.3.6 2.5 1.6 3.3L12 12l-2.4 2.5c-1 .8-1.6 2-1.6 3.3V21" />
+            <path d="M16 3v3.2c0 1.3-.6 2.5-1.6 3.3L12 12l2.4 2.5c1 .8 1.6 2 1.6 3.3V21" />
+          </svg>
+          <span>Cuenta atrás</span>
+        </button>
+
+        <!-- Abre la vista donde se eligen tono, canción y emisora. -->
+        <button
+          class="bar-btn"
+          type="button"
+          data-vista-destino="sonido"
+          aria-label="Opciones de sonido"
+          title="Opciones de sonido"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4 9.5h3L11.5 6v12L7 14.5H4z" />
+            <path d="M15.5 9.25a3.75 3.75 0 0 1 0 5.5" />
+            <path d="M18.5 6.75a7.5 7.5 0 0 1 0 10.5" />
+          </svg>
+          <span>Sonido</span>
+        </button>
+      </nav>
+
+      <!-- Acción principal: flota centrada justo encima de la barra. -->
+      <button
+        class="fab"
+        id="fab-crear"
+        type="button"
+        data-accion="crear-alarma"
+        aria-label="Crear alarma"
+        title="Crear"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="toast-zona" id="toast-zona" role="status" aria-live="polite"></div>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
