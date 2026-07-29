@@ -129,7 +129,23 @@ eliges un tema a mano, manda tu elección y deja de seguir al sistema.
 
 ---
 
-## 5. Qué falta por hacer
+## 5. Dónde se guardan tus datos
+
+Todo lo que configuras —alarmas, tono elegido y modo día/noche— se guarda **en el propio
+navegador del dispositivo**, no en ningún servidor. Consecuencias prácticas:
+
+- **No se sincroniza entre dispositivos.** Las alarmas que crees en el ordenador no
+  aparecen en el móvil, y al contrario.
+- **Cada navegador tiene sus datos.** Si abres la aplicación en Chrome y en Edge, cada uno
+  lleva sus propias alarmas.
+- **Se pierden si borras los datos de navegación** marcando *cookies y datos de sitios*.
+  Borrar solo el historial o la caché no las toca.
+- Cuando instales la aplicación en el móvil (Fase 8), pasará a usar el almacenamiento propio
+  de la aplicación, que ya no se ve afectado por la limpieza del navegador.
+
+---
+
+## 6. Qué falta por hacer
 
 | Fase | Qué añadirá |
 |---|---|

@@ -40,15 +40,49 @@ RadioAlarm/
 │   ├── app.js          Punto de entrada
 │   ├── theme.js        Conmutador día/noche
 │   ├── store.js        Persistencia sobre localStorage
+│   ├── datos/
+│   │   └── tonos.js    Catálogo de tonos
+│   ├── model/
+│   │   ├── alarma.js   Esquema, saneado y cálculo del próximo disparo
+│   │   └── alarmas.js  Repositorio: altas, bajas y consultas
 │   └── ui/
 │       ├── vistas.js   Navegación entre pantallas
 │       ├── sonido.js   Vista de opciones de sonido
 │       ├── plegable.js Listas que se despliegan y encogen
 │       ├── layout.js   Medidas de la barra inferior
 │       └── toast.js    Avisos flotantes
+├── tests/
+│   └── modelo.test.mjs Pruebas del modelo
 └── docs/
     └── MANUAL.md       Manual de uso
 ```
+
+### Capas
+
+```
+ui/  →  model/  →  store.js  →  localStorage
+        datos/
+```
+
+La interfaz nunca lee el almacenamiento directamente: pasa por `model/`, que
+devuelve alarmas ya saneadas. `model/alarma.js` es lógica pura —sin DOM y sin
+almacenamiento— para poder probarla fuera del navegador.
+
+---
+
+## Pruebas
+
+```bash
+npm test
+```
+
+Node puro, sin dependencias ni framework. Cubren el saneado del dato, el cálculo del
+próximo disparo (incluidos el cambio de horario y el caso «solo hoy y la hora ya pasada») y
+el repositorio con un `localStorage` de mentira.
+
+No hay `npm install`: `package.json` solo existe para declarar `"type": "module"` —que es
+lo que hace que Node lea los archivos `.js` como módulos— y el atajo de las pruebas. La
+aplicación no tiene ninguna dependencia.
 
 ---
 
@@ -71,7 +105,7 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Esqueleto, tokens de diseño, tema día/noche y navegación entre vistas | ✅ Hecha |
-| 2 | Modelo de datos y almacenamiento | Pendiente |
+| 2 | Modelo de datos y almacenamiento | ✅ Hecha |
 | 3 | Pantalla principal con el listado de alarmas | Pendiente |
 | 4 | Editor de alarma | Pendiente |
 | 5 | Fuentes de sonido: tonos sintetizados, canción y radio | Pendiente |
