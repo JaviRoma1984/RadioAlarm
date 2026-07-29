@@ -52,6 +52,14 @@ El botón queda resaltado en turquesa mientras estás en esta pantalla.
 Los nueve timbres incluidos. Pulsa el que quieras y quedará marcado con el círculo
 turquesa. **Clásico** viene seleccionado de fábrica, así que siempre hay un tono elegido.
 
+Para no ocupar toda la pantalla, la lista aparece **encogida mostrando los tres primeros**.
+El botón **Ver los 9 tonos**, arriba a la derecha del apartado, la despliega; una vez
+abierta, el mismo botón pasa a decir **Ver menos** y la vuelve a encoger. La flecha gira
+para indicar en qué estado está.
+
+Si el tono que tienes elegido no está entre los tres primeros, la lista se abre desplegada
+sola, para que puedas ver cuál está marcado.
+
 | Tono | Cómo suena |
 |---|---|
 | **Clásico** | Timbre de despertador de cuerda, trino de dos notas |

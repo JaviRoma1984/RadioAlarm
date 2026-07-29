@@ -11,10 +11,14 @@
  */
 
 import { leer, escribir } from "../store.js";
+import { crearPlegable } from "./plegable.js";
 import { toast } from "./toast.js";
 import { volverAlInicio } from "./vistas.js";
 
 const CLAVE = "sonido";
+
+/** Tonos que se ven con la lista encogida. */
+const TONOS_VISIBLES = 3;
 
 /**
  * Catálogo de tonos incluidos.
@@ -100,6 +104,9 @@ let hayCambios = false;
 /*  Pintado                                                                   */
 /* -------------------------------------------------------------------------- */
 
+/** Plegable de la lista de tonos; se crea la primera vez que se pinta. */
+let plegableTonos = null;
+
 function pintarTonos() {
   const lista = document.getElementById("lista-tonos");
   if (!lista) return;
@@ -127,6 +134,19 @@ function pintarTonos() {
       return etiqueta;
     }),
   );
+
+  plegableTonos ??= crearPlegable({
+    contenedor: lista,
+    boton: document.getElementById("btn-plegar-tonos"),
+    etiqueta: document.getElementById("btn-plegar-tonos-texto"),
+    visibles: TONOS_VISIBLES,
+    textoAbrir: (total) => `Ver los ${total} tonos`,
+  });
+
+  // Si el tono elegido queda fuera de los primeros, la lista se abre
+  // desplegada: si no, no se vería cuál está marcado.
+  const posicion = TONOS.findIndex((tono) => tono.id === borrador.tono);
+  plegableTonos.refrescar({ desplegado: posicion >= TONOS_VISIBLES });
 }
 
 /** Refresca los rótulos de canción y emisora con lo que haya en el borrador. */

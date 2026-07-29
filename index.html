@@ -125,13 +125,40 @@
           <h2 class="vista__titulo">Opciones de sonido</h2>
 
           <section class="panel">
-            <h3 class="panel__titulo">Tono</h3>
+            <div class="panel__cabecera">
+              <h3 class="panel__titulo">Tono</h3>
+              <button
+                class="btn-plegar"
+                type="button"
+                id="btn-plegar-tonos"
+                aria-expanded="false"
+                aria-controls="lista-tonos"
+              >
+                <span id="btn-plegar-tonos-texto">Ver todos</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.25"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9.5 6 6 6-6" />
+                </svg>
+              </button>
+            </div>
             <p class="panel__ayuda">
               El timbre que suena si no eliges canción ni emisora. Los tonos de fábrica del
               móvil no son accesibles desde el navegador, pero podrás añadir los tuyos
               desde un archivo.
             </p>
-            <div class="opciones" id="lista-tonos" role="radiogroup" aria-label="Tono"></div>
+            <div
+              class="opciones opciones--plegable"
+              id="lista-tonos"
+              role="radiogroup"
+              aria-label="Tono"
+            ></div>
             <div class="panel__pie">
               <button class="btn btn--suave" type="button" data-accion="anadir-tono">
                 Añadir un tono mío

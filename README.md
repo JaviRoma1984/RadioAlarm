@@ -43,6 +43,7 @@ RadioAlarm/
 │   └── ui/
 │       ├── vistas.js   Navegación entre pantallas
 │       ├── sonido.js   Vista de opciones de sonido
+│       ├── plegable.js Listas que se despliegan y encogen
 │       ├── layout.js   Medidas de la barra inferior
 │       └── toast.js    Avisos flotantes
 └── docs/

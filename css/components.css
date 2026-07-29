@@ -223,6 +223,53 @@
   font-size: var(--text-lg);
 }
 
+/* Fila de título con una acción a la derecha (el botón de desplegar). */
+.panel__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.panel__cabecera .panel__titulo {
+  margin-bottom: 0;
+}
+
+/* Botón de desplegar / encoger una lista. */
+.btn-plegar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  color: var(--accent);
+  background-color: var(--accent-soft);
+  border: 1px solid transparent;
+
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+
+  transition: border-color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease);
+}
+
+.btn-plegar:hover {
+  border-color: var(--accent);
+}
+
+.btn-plegar svg {
+  width: 1rem;
+  height: 1rem;
+  transition: transform var(--dur-base) var(--ease);
+}
+
+.btn-plegar[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
 .panel__ayuda {
   margin-bottom: var(--space-3);
   font-size: var(--text-sm);
@@ -238,6 +285,12 @@
 .opciones {
   display: grid;
   gap: var(--space-2);
+}
+
+/* El alto en píxeles lo pone `js/ui/plegable.js`; aquí solo se recorta y anima. */
+.opciones--plegable {
+  overflow: hidden;
+  transition: max-height var(--dur-slow) var(--ease);
 }
 
 .opcion {
