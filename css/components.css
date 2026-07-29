@@ -82,9 +82,19 @@
   height: 1.15rem;
 }
 
+/* En modo día los botones llevan un perfilado turquesa fino: sobre fondo claro
+   el relleno gris solo no los delimita bien. En modo noche no hace falta, el
+   contraste del propio relleno ya los separa del fondo.
+   El borde es de 1px (el trazo más fino que dibuja un navegador de forma
+   nítida); para que se lea como una raya fina y no como un marco, el turquesa
+   va al 55 %. */
+[data-theme="light"] .bar-btn {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
 .bar-btn:hover {
   color: var(--accent);
-  border-color: var(--accent-ring);
+  border-color: var(--accent);
   background-color: var(--accent-soft);
 }
 
