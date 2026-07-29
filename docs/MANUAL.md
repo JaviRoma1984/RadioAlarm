@@ -102,11 +102,15 @@ reproductor de streams.
 
 Al pie de la pantalla hay dos botones:
 
-- **Guardar cambios** — guarda tu elección. Mientras tengas algo pendiente de guardar, el
-  botón se rodea de un borde amarillo para avisarte. Al guardar aparece un aviso de
-  confirmación con el tono elegido.
-- **Volver atrás** — regresa a la pantalla principal de alarmas. Si tenías cambios sin
-  guardar, se descartan y te avisa de ello.
+- **Guardar cambios** — guarda tu elección y **te devuelve a la pantalla principal**, con
+  un aviso de confirmación indicando el tono elegido. Mientras tengas algo pendiente de
+  guardar, el botón se rodea de un borde amarillo.
+- **Volver atrás** — regresa a la pantalla principal sin guardar. Si tenías cambios
+  pendientes, se descartan y te avisa de ello.
+
+> Si el navegador tuviera el almacenamiento bloqueado y no se pudiera guardar, la
+> aplicación **no** te lleva al inicio: se queda en la pantalla y te avisa del error, para
+> que no te vayas pensando que tus cambios están a salvo.
 
 Lo que guardes se mantiene al cerrar y volver a abrir la aplicación.
 

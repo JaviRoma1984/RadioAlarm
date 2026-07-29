@@ -204,18 +204,23 @@ export function refrescarSonido() {
 
 function guardar() {
   if (!hayCambios) {
-    toast("No hay cambios que guardar");
+    toast("No había cambios que guardar");
+    volverAlInicio();
     return;
   }
 
   if (escribir(CLAVE, borrador)) {
     marcarCambios(false);
     toast(`Guardado · tono ${nombreTono(borrador.tono)}`);
-  } else {
-    toast("No se pudo guardar: el navegador bloquea el almacenamiento", {
-      tipo: "error",
-    });
+    volverAlInicio();
+    return;
   }
+
+  // Si no se pudo guardar se sigue en la pantalla: llevar al usuario al inicio
+  // le haría creer que sus cambios están a salvo cuando se han perdido.
+  toast("No se pudo guardar: el navegador bloquea el almacenamiento", {
+    tipo: "error",
+  });
 }
 
 function volver() {
