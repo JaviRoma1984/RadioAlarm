@@ -49,15 +49,35 @@ El botón queda resaltado en turquesa mientras estás en esta pantalla.
 
 ### Tono
 
-Los cuatro timbres incluidos. Pulsa el que quieras y quedará marcado con el círculo
+Los nueve timbres incluidos. Pulsa el que quieras y quedará marcado con el círculo
 turquesa. **Clásico** viene seleccionado de fábrica, así que siempre hay un tono elegido.
 
 | Tono | Cómo suena |
 |---|---|
-| **Clásico** | Timbre de despertador tradicional |
-| **Amanecer** | Empieza flojo y sube poco a poco |
-| **Digital** | Pitido agudo y repetitivo |
+| **Clásico** | Timbre de despertador de cuerda, trino de dos notas |
+| **Amanecer** | Campanilleo suave que sube de volumen poco a poco |
+| **Digital** | Pitido agudo y repetitivo, imposible de ignorar |
 | **Campanas** | Repique corto y cálido |
+| **Marimba** | Arpegio de madera, notas ascendentes |
+| **Radar** | Pulso doble que se va acelerando |
+| **Sónar** | Tono profundo con eco largo |
+| **Sirena** | Barrido que sube y baja sin parar |
+| **Goteo** | Pulsos cortos y espaciados, para despertar sin sobresalto |
+
+#### ¿Y los tonos de mi móvil?
+
+**No se pueden usar desde el navegador.** Los tonos de fábrica de Android están en una
+carpeta protegida del sistema a la que ninguna página web tiene acceso: solo las
+aplicaciones nativas pueden leerlos.
+
+Tienes dos alternativas:
+
+- **Importar tus propios archivos** con el botón *Añadir un tono mío* (llega en la Fase 5).
+  Si tienes tonos guardados en la carpeta `Ringtones` o `Sounds` del móvil, normalmente
+  aparecen en el selector de archivos y podrás usarlos. Los de fábrica, no.
+- **Esperar a la versión Android** de la Fase 10. Al dejar de ser una página web, la
+  aplicación sí puede pedirle al sistema la lista completa de tonos de alarma, timbres y
+  notificaciones del móvil.
 
 ### Canción
 

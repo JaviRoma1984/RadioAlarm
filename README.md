@@ -73,12 +73,12 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 2 | Modelo de datos y almacenamiento | Pendiente |
 | 3 | Pantalla principal con el listado de alarmas | Pendiente |
 | 4 | Editor de alarma | Pendiente |
-| 5 | Fuentes de sonido: tono, canción y radio | Pendiente |
+| 5 | Fuentes de sonido: tonos sintetizados, importar audio propio, canción y radio | Pendiente |
 | 6 | Motor de disparo y pantalla de alarma sonando | Pendiente |
 | 7 | Cronómetro y temporizador de cuenta atrás | Pendiente |
 | 8 | Convertirla en PWA instalable | Pendiente |
 | 9 | Publicación en GitHub Pages y manual | Pendiente |
-| 10 | Envoltorio Android nativo (alarma con el móvil bloqueado) | Pendiente |
+| 10 | Envoltorio Android nativo: alarma con el móvil bloqueado y tonos del sistema | Pendiente |
 
 ---
 
@@ -98,3 +98,7 @@ Documentadas aquí desde el principio porque condicionan el diseño:
   por contenido mixto.
 - **El selector de carpetas no existe en móvil.** Allí las canciones se importan y quedan
   guardadas dentro de la propia app.
+- **Los tonos de fábrica del móvil no son accesibles desde el navegador.** Viven en una
+  carpeta protegida del sistema y solo `RingtoneManager` (nativo) los expone. Por eso los
+  tonos incluidos se generan por síntesis con Web Audio, y la lista completa del sistema
+  no llega hasta la Fase 10.
