@@ -39,7 +39,12 @@ RadioAlarm/
 ├── js/
 │   ├── app.js          Punto de entrada
 │   ├── theme.js        Conmutador día/noche
-│   └── ui/             Componentes de interfaz
+│   ├── store.js        Persistencia sobre localStorage
+│   └── ui/
+│       ├── vistas.js   Navegación entre pantallas
+│       ├── sonido.js   Vista de opciones de sonido
+│       ├── layout.js   Medidas de la barra inferior
+│       └── toast.js    Avisos flotantes
 └── docs/
     └── MANUAL.md       Manual de uso
 ```
@@ -64,7 +69,7 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| 1 | Esqueleto, tokens de diseño y tema día/noche | ✅ Hecha |
+| 1 | Esqueleto, tokens de diseño, tema día/noche y navegación entre vistas | ✅ Hecha |
 | 2 | Modelo de datos y almacenamiento | Pendiente |
 | 3 | Pantalla principal con el listado de alarmas | Pendiente |
 | 4 | Editor de alarma | Pendiente |

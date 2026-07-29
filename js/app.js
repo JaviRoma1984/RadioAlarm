@@ -1,20 +1,21 @@
 /**
  * RadioAlarm · Punto de entrada
  *
- * Estado del proyecto: Fase 1 — esqueleto y sistema visual.
- * Las acciones de la barra inferior se conectarán en las fases 3 y 4.
+ * Estado del proyecto: Fase 1 — esqueleto, sistema visual y navegación entre
+ * vistas. El listado de alarmas llega en la Fase 3 y su editor en la Fase 4.
  */
 
 import { iniciarTema } from "./theme.js";
 import { iniciarMedidas } from "./ui/layout.js";
+import { iniciarSonido } from "./ui/sonido.js";
 import { toast } from "./ui/toast.js";
+import { iniciarVistas } from "./ui/vistas.js";
 
 /** Acciones aún sin implementar, con su fase prevista. */
 const PENDIENTES = {
   "crear-alarma": "Crear alarmas llega en la Fase 4",
   crono: "El cronómetro llega en la Fase 7",
   "cuenta-atras": "El temporizador de cuenta atrás llega en la Fase 7",
-  "elegir-tono": "La biblioteca de tonos llega en la Fase 5",
   "elegir-cancion": "Elegir canciones de tu carpeta llega en la Fase 5",
   "elegir-radio": "Las emisoras de radio llegan en la Fase 5",
 };
@@ -32,8 +33,8 @@ function iniciarSombraCabecera() {
   window.addEventListener("scroll", actualizar, { passive: true });
 }
 
-/** Conecta el botón flotante y los botones de la barra inferior. */
-function iniciarBarraAcciones() {
+/** Conecta las acciones todavía no implementadas para que avisen de su fase. */
+function iniciarAccionesPendientes() {
   document.querySelectorAll("[data-accion]").forEach((boton) => {
     boton.addEventListener("click", () => {
       const mensaje = PENDIENTES[boton.dataset.accion];
@@ -49,7 +50,9 @@ function iniciar() {
   });
   iniciarMedidas();
   iniciarSombraCabecera();
-  iniciarBarraAcciones();
+  iniciarSonido();
+  iniciarVistas();
+  iniciarAccionesPendientes();
 }
 
 iniciar();
