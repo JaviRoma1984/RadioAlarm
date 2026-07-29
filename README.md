@@ -52,7 +52,7 @@ RadioAlarm/
 │       ├── alarmas.js     Vista del listado de alarmas
 │       ├── editor.js      Editor de alarma: crear y editar
 │       ├── sonido.js      Vista de opciones de sonido (tono favorito)
-│       ├── selectorTono.js  Widget de tono compartido por sonido.js y editor.js
+│       ├── selectorTono.js  Widget de tono: lista, selección y reproducción
 │       ├── plegable.js    Listas que se despliegan y encogen
 │       ├── layout.js      Medidas de la barra inferior
 │       └── toast.js       Avisos flotantes

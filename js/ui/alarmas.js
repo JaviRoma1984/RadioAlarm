@@ -16,6 +16,7 @@ import { nombreTono } from "../datos/tonos.js";
 import { FUENTE, proximoDisparo, resumenRepeticion, tiempoHasta } from "../model/alarma.js";
 import { alCambiar, alternarActiva, borrarAlarma, listarAlarmas } from "../model/alarmas.js";
 import { abrirEditorAlarma, abrirEditorNuevo } from "./editor.js";
+import { configuracionSonido } from "./sonido.js";
 import { toast } from "./toast.js";
 import { vistaActual } from "./vistas.js";
 
@@ -29,13 +30,19 @@ let ultimas = [];
 /*  Textos                                                                    */
 /* -------------------------------------------------------------------------- */
 
-/** «Tono · Clásico», «Radio · Radio 3»… */
+/**
+ * «Tono · Clásico», «Radio · Radio 3»…
+ *
+ * El tono no se guarda de verdad por alarma —se elige una sola vez en
+ * Opciones de sonido—, así que aquí se muestra siempre el favorito actual y
+ * no el que quedó guardado en la alarma la última vez que se editó.
+ */
 function descripcionSonido(alarma) {
-  const { tipo, tono, cancion, emisora } = alarma.sonido;
+  const { tipo, cancion, emisora } = alarma.sonido;
 
   if (tipo === FUENTE.CANCION && cancion) return `Canción · ${cancion.nombre}`;
   if (tipo === FUENTE.RADIO && emisora) return `Radio · ${emisora.nombre}`;
-  return `Tono · ${nombreTono(tono)}`;
+  return `Tono · ${nombreTono(configuracionSonido().tono)}`;
 }
 
 /** Línea inferior de la tarjeta: cuándo sonará, o por qué no va a sonar. */

@@ -11,18 +11,16 @@
  * Estado: la elección de canción y de emisora todavía no tiene selector de
  * archivos ni reproductor de streams —llegan en la Fase 5—, así que sus
  * botones «Elegir» avisan de la fase. El resto del editor ya es real.
+ *
+ * El tono no se elige aquí: solo se muestra el que esté puesto como favorito
+ * en Opciones de sonido. Esa pantalla es el único sitio donde se escoge, para
+ * no duplicar el mismo listado de nueve tonos en dos pantallas distintas.
  */
 
-import {
-  DIAS_SEMANA,
-  FUENTE,
-  POSPONER,
-  REPETICION,
-  crearAlarma,
-} from "../model/alarma.js";
+import { DIAS_SEMANA, FUENTE, POSPONER, REPETICION, crearAlarma } from "../model/alarma.js";
+import { nombreTono } from "../datos/tonos.js";
 import { borrarAlarma, guardarAlarma, obtenerAlarma } from "../model/alarmas.js";
 import { configuracionSonido } from "./sonido.js";
-import { crearSelectorTono } from "./selectorTono.js";
 import { toast } from "./toast.js";
 import { mostrarVista, volverAlInicio } from "./vistas.js";
 
@@ -33,15 +31,6 @@ let borrador = crearAlarma();
 let editandoId = null;
 
 let hayCambios = false;
-
-const selectorTono = crearSelectorTono({
-  contenedor: document.getElementById("editor-tonos"),
-  name: "editor-tono",
-  onCambiar(id) {
-    borrador.sonido.tono = id;
-    marcarCambios();
-  },
-});
 
 /* -------------------------------------------------------------------------- */
 /*  Utilidades                                                                */
@@ -106,15 +95,21 @@ function mostrarDias(mostrar) {
   }
 }
 
-/** Solo uno de los tres bloques —tonos, canción, emisora— está a la vista. */
+/** Solo uno de los tres bloques —tono, canción, emisora— está a la vista. */
 function mostrarFuente(tipo) {
-  const tonos = document.getElementById("editor-tonos");
+  const tono = document.getElementById("editor-tono");
   const cancion = document.getElementById("editor-cancion");
   const radio = document.getElementById("editor-radio");
 
-  if (tonos) tonos.hidden = tipo !== FUENTE.TONO;
+  if (tono) tono.hidden = tipo !== FUENTE.TONO;
   if (cancion) cancion.hidden = tipo !== FUENTE.CANCION;
   if (radio) radio.hidden = tipo !== FUENTE.RADIO;
+}
+
+/** El tono no se elige aquí: se muestra el favorito de Opciones de sonido. */
+function pintarTono() {
+  const nodo = document.getElementById("editor-valor-tono");
+  if (nodo) nodo.textContent = nombreTono(configuracionSonido().tono);
 }
 
 function pintarPosponer() {
@@ -173,7 +168,7 @@ function pintar() {
     .querySelectorAll('#editor-fuente input[type="radio"]')
     .forEach((radio) => (radio.checked = radio.value === borrador.sonido.tipo));
   mostrarFuente(borrador.sonido.tipo);
-  selectorTono.pintar(borrador.sonido.tono);
+  pintarTono();
   pintarRecurso("editor-valor-cancion", borrador.sonido.cancion);
   pintarRecurso("editor-valor-radio", borrador.sonido.emisora);
 
@@ -205,8 +200,6 @@ function abrir(id) {
     borrador = structuredClone(existente);
   } else {
     borrador = crearAlarma({ hora: siguienteHoraEnPunto() });
-    // Una alarma nueva parte del tono favorito configurado en Opciones de sonido.
-    borrador.sonido.tono = configuracionSonido().tono;
   }
 
   marcarCambios(false);
@@ -249,9 +242,11 @@ function alternarDia(boton) {
 }
 
 function guardar() {
-  selectorTono.silenciar();
-
   const tipoElegido = borrador.sonido.tipo;
+  // El tono no se elige en este editor: al guardar se sincroniza con el
+  // favorito de Opciones de sonido, que es la única fuente de verdad.
+  borrador.sonido.tono = configuracionSonido().tono;
+
   const guardada = guardarAlarma(borrador);
 
   if (!guardada) {
@@ -283,7 +278,6 @@ function guardar() {
 }
 
 function volver() {
-  selectorTono.silenciar();
   if (hayCambios) toast("Cambios sin guardar descartados", { tipo: "aviso" });
   volverAlInicio();
 }
@@ -294,8 +288,6 @@ function borrarDesdeEditor() {
   if (!window.confirm(`¿Borrar la alarma «${borrador.nombre}» de las ${borrador.hora}?`)) {
     return;
   }
-
-  selectorTono.silenciar();
 
   if (borrarAlarma(editandoId)) toast(`Alarma «${borrador.nombre}» borrada`);
   volverAlInicio();
@@ -365,7 +357,6 @@ export function iniciarEditor() {
 
   document.addEventListener("vista:cambiada", (evento) => {
     if (evento.detail.vista === "editor") abrir(evento.detail.id ?? null);
-    else selectorTono.silenciar();
   });
 }
 
