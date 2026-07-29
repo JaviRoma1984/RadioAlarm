@@ -88,6 +88,43 @@ const {
   proximaAlarma,
 } = await import("../js/model/alarmas.js");
 
+const { TONOS, TONO_POR_DEFECTO, existeTono, nombreTono } = await import(
+  "../js/datos/tonos.js"
+);
+
+// El sintetizador solo toca `window` dentro de sus funciones, así que se puede
+// importar en Node para comprobar la correspondencia con el catálogo.
+const { tonosSintetizables } = await import("../js/audio/sintetizador.js");
+
+/* -------------------------------------------------------------------------- */
+/*  Catálogo de tonos                                                         */
+/* -------------------------------------------------------------------------- */
+
+grupo("Catálogo de tonos");
+
+prueba("todos los tonos del catálogo tienen sonido", () => {
+  const conSonido = tonosSintetizables();
+  const mudos = TONOS.filter((tono) => !conSonido.includes(tono.id)).map((t) => t.id);
+
+  igual(mudos, [], "estos tonos se pueden elegir pero no suenan");
+});
+
+prueba("no hay sonidos huérfanos sin entrada en el catálogo", () => {
+  const huerfanos = tonosSintetizables().filter((id) => !existeTono(id));
+
+  igual(huerfanos, [], "estos sonidos existen pero no se pueden elegir");
+});
+
+prueba("el tono por defecto está en el catálogo", () => {
+  cierto(existeTono(TONO_POR_DEFECTO));
+  igual(nombreTono(TONO_POR_DEFECTO), "Clásico");
+});
+
+prueba("los ids del catálogo no se repiten", () => {
+  const ids = TONOS.map((tono) => tono.id);
+  igual(ids.length, new Set(ids).size);
+});
+
 /* -------------------------------------------------------------------------- */
 /*  Horas                                                                     */
 /* -------------------------------------------------------------------------- */

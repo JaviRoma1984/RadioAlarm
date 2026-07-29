@@ -96,7 +96,9 @@
         <!-- ---------- Vista: listado de alarmas ---------- -->
         <!-- Fase 3 sustituirá este estado vacío por el listado real. -->
         <section class="vista" data-vista="alarmas" aria-label="Mis alarmas">
-          <div class="empty">
+          <ul class="lista-alarmas" id="lista-alarmas" hidden></ul>
+
+          <div class="empty" id="alarmas-vacio">
             <div class="empty__icon">
               <svg
                 viewBox="0 0 24 24"

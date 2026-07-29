@@ -1,11 +1,12 @@
 /**
  * RadioAlarm · Punto de entrada
  *
- * Estado del proyecto: Fase 1 — esqueleto, sistema visual y navegación entre
- * vistas. El listado de alarmas llega en la Fase 3 y su editor en la Fase 4.
+ * Estado del proyecto: Fase 3 de 10 — listado de alarmas en marcha. El editor
+ * completo llega en la Fase 4 y el motor que las hace sonar, en la Fase 6.
  */
 
 import { iniciarTema } from "./theme.js";
+import { iniciarListaAlarmas } from "./ui/alarmas.js";
 import { iniciarMedidas } from "./ui/layout.js";
 import { iniciarSonido } from "./ui/sonido.js";
 import { toast } from "./ui/toast.js";
@@ -13,7 +14,6 @@ import { iniciarVistas } from "./ui/vistas.js";
 
 /** Acciones aún sin implementar, con su fase prevista. */
 const PENDIENTES = {
-  "crear-alarma": "Crear alarmas llega en la Fase 4",
   crono: "El cronómetro llega en la Fase 7",
   "cuenta-atras": "El temporizador de cuenta atrás llega en la Fase 7",
   "elegir-cancion": "Elegir canciones de tu carpeta llega en la Fase 5",
@@ -50,6 +50,7 @@ function iniciar() {
   });
   iniciarMedidas();
   iniciarSombraCabecera();
+  iniciarListaAlarmas();
   iniciarSonido();
   iniciarVistas();
   iniciarAccionesPendientes();

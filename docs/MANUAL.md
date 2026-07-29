@@ -1,6 +1,6 @@
 # Manual de RadioAlarm
 
-Este manual crece con cada fase del proyecto. Ahora mismo cubre la **Fase 1**.
+Este manual crece con cada fase del proyecto. Ahora mismo cubre las **fases 1 a 3** de 10.
 
 ---
 
@@ -23,8 +23,8 @@ cmd /c mklink /J "C:\xampp\htdocs\RadioAlarm" "C:\Users\j-f-r\Documents\DEV\Repo
 
 **Cabecera.** El nombre de la aplicación y, a la derecha, el botón de cambio de tema.
 
-**Zona central.** Aquí aparecerá el listado de tus alarmas. Mientras no tengas ninguna,
-muestra un mensaje de bienvenida.
+**Zona central.** El listado de tus alarmas. Mientras no tengas ninguna, muestra un mensaje
+de bienvenida.
 
 **Botón flotante «Crear».** El círculo turquesa con el signo **+**, centrado justo encima
 de la barra inferior. Es la acción principal: crear una alarma nueva.
@@ -42,7 +42,49 @@ indicando en qué fase estarán disponibles. **Sonido** ya funciona.
 
 ---
 
-## 3. Opciones de sonido
+## 3. Tus alarmas
+
+### Crear una alarma
+
+Pulsa el botón **+**. La alarma se crea con la **hora en punto siguiente a la actual**: si
+son las 15:20, se crea a las 16:00.
+
+> De momento no se puede elegir la hora ni el nombre al crearla. El editor completo —con
+> nombre, hora, días de la semana, sonido, vibración y pospuestos— llega en la **Fase 4**.
+> Hasta entonces el botón **+** sirve para poder probar el listado.
+
+### Qué muestra cada alarma
+
+| Elemento | Qué es |
+|---|---|
+| **Hora grande** | A qué hora suena |
+| **Nombre** | El nombre que le has puesto |
+| **Línea gris** | Cada cuánto se repite y con qué va a sonar. Por ejemplo *De lunes a viernes · Tono Clásico* |
+| **Línea turquesa** | Cuánto falta para que suene: *en 7 h 30 min*. Se refresca sola cada medio minuto |
+
+Las alarmas aparecen **ordenadas por hora**, de la más temprana a la más tardía.
+
+### Activar y desactivar
+
+El **interruptor** de la derecha activa y desactiva la alarma sin borrarla. Una alarma
+desactivada se apaga visualmente y su línea inferior pasa a decir *Desactivada*.
+
+Es lo que te conviene para una alarma que usas solo algunos días: la desactivas y sigue ahí
+con toda su configuración.
+
+### Borrar
+
+El botón de la **papelera**, debajo del interruptor. **Pregunta antes de borrar**, porque no
+se puede deshacer.
+
+### Editar
+
+Al pulsar sobre una alarma se abrirá su editor. Llega en la **Fase 4**; por ahora avisa de
+ello.
+
+---
+
+## 4. Opciones de sonido
 
 Pulsa **Sonido** en la barra inferior. La zona central cambia y muestra tres apartados.
 El botón queda resaltado en turquesa mientras estás en esta pantalla.
@@ -60,6 +102,15 @@ está abierto o cerrado.
 automáticamente, y no hay forma de quedarse sin ninguno: **Clásico** viene puesto de
 fábrica y, si pulsas el que ya está marcado, sigue marcado. La línea **Tono elegido** se
 actualiza al instante, así que puedes cerrar el listado y seguir viendo cuál tienes.
+
+#### Al pulsar un tono, se oye
+
+Cada tono suena en cuanto lo seleccionas, para que puedas compararlos sin salir de la
+pantalla. Mientras se está oyendo, la opción se resalta en **amarillo**.
+
+- Si pulsas el tono que ya tienes marcado, **vuelve a sonar**.
+- Si pulsas otro antes de que acabe, el anterior se corta y empieza el nuevo.
+- El sonido se corta solo al **guardar** o al **volver atrás**.
 
 | Tono | Cómo suena |
 |---|---|
@@ -114,7 +165,7 @@ Lo que guardes se mantiene al cerrar y volver a abrir la aplicación.
 
 ---
 
-## 4. Modo día y modo noche
+## 5. Modo día y modo noche
 
 Pulsa el botón redondo de la esquina superior derecha:
 
@@ -129,7 +180,7 @@ eliges un tema a mano, manda tu elección y deja de seguir al sistema.
 
 ---
 
-## 5. Dónde se guardan tus datos
+## 6. Dónde se guardan tus datos
 
 Todo lo que configuras —alarmas, tono elegido y modo día/noche— se guarda **en el propio
 navegador del dispositivo**, no en ningún servidor. Consecuencias prácticas:
@@ -145,7 +196,7 @@ navegador del dispositivo**, no en ningún servidor. Consecuencias prácticas:
 
 ---
 
-## 6. Qué falta por hacer
+## 7. Qué falta por hacer
 
 | Fase | Qué añadirá |
 |---|---|

@@ -10,6 +10,7 @@
  * llegan en la Fase 5.
  */
 
+import { pararTono, reproducirTono } from "../audio/sintetizador.js";
 import { TONOS, TONO_POR_DEFECTO, existeTono, nombreTono } from "../datos/tonos.js";
 import { leer, escribir } from "../store.js";
 import { crearPlegable } from "./plegable.js";
@@ -55,6 +56,54 @@ let hayCambios = false;
 /** Plegable de la lista de tonos; se crea la primera vez que se pinta. */
 let plegableTonos = null;
 
+/** Temporizador que retira la marca de «suena ahora». */
+let finDeMuestra = null;
+
+/** Última muestra lanzada, para no repetirla por un mismo clic. */
+let ultimaMuestra = { id: null, momento: 0 };
+
+/** Margen en el que se considera que dos peticiones son el mismo gesto. */
+const MISMO_GESTO_MS = 150;
+
+/**
+ * Reproduce el tono elegido y lo marca mientras suena.
+ *
+ * Se llama desde el gesto de selección del usuario, que es lo que permite al
+ * navegador arrancar el audio.
+ *
+ * Un `<label>` reenvía el clic al `<input>` que envuelve, así que una sola
+ * pulsación puede llegar aquí dos veces —por `change` y por `click`—. La guarda
+ * de tiempo evita que el tono se corte y vuelva a empezar.
+ */
+function escucharTono(id, opcion) {
+  const ahora = performance.now();
+  if (ultimaMuestra.id === id && ahora - ultimaMuestra.momento < MISMO_GESTO_MS) return;
+  ultimaMuestra = { id, momento: ahora };
+
+  clearTimeout(finDeMuestra);
+  document
+    .querySelectorAll('.opcion[data-sonando="true"]')
+    .forEach((otra) => delete otra.dataset.sonando);
+
+  const duracion = reproducirTono(id);
+  if (!duracion) return; // navegador sin Web Audio: la selección funciona igual
+
+  opcion.dataset.sonando = "true";
+  finDeMuestra = setTimeout(
+    () => delete opcion.dataset.sonando,
+    duracion * 1000,
+  );
+}
+
+/** Silencia la muestra y quita la marca. Al salir de la vista o al guardar. */
+function silenciarMuestra() {
+  clearTimeout(finDeMuestra);
+  pararTono();
+  document
+    .querySelectorAll('.opcion[data-sonando="true"]')
+    .forEach((opcion) => delete opcion.dataset.sonando);
+}
+
 function pintarTonos() {
   const lista = document.getElementById("lista-tonos");
   if (!lista) return;
@@ -78,6 +127,13 @@ function pintarTonos() {
         borrador.tono = tono.id;
         pintarRecursos(); // refleja el cambio en la línea del tono elegido
         marcarCambios();
+        escucharTono(tono.id, etiqueta);
+      });
+
+      // Volver a pulsar el que ya está elegido no dispara `change`, pero se
+      // espera oírlo otra vez.
+      etiqueta.addEventListener("click", () => {
+        if (radio.checked && borrador.tono === tono.id) escucharTono(tono.id, etiqueta);
       });
 
       return etiqueta;
@@ -134,6 +190,8 @@ export function refrescarSonido() {
 /* -------------------------------------------------------------------------- */
 
 function guardar() {
+  silenciarMuestra();
+
   if (!hayCambios) {
     toast("No había cambios que guardar");
     volverAlInicio();
@@ -155,6 +213,7 @@ function guardar() {
 }
 
 function volver() {
+  silenciarMuestra();
   if (hayCambios) toast("Cambios sin guardar descartados", { tipo: "aviso" });
   refrescarSonido();
   volverAlInicio();
@@ -166,8 +225,10 @@ export function iniciarSonido() {
   document.getElementById("btn-guardar-sonido")?.addEventListener("click", guardar);
   document.getElementById("btn-volver-sonido")?.addEventListener("click", volver);
 
-  // Al abrir la vista se descarta cualquier borrador anterior.
+  // Al abrir la vista se descarta cualquier borrador anterior; al salir de ella
+  // se corta cualquier tono de muestra que siguiera sonando.
   document.addEventListener("vista:cambiada", (evento) => {
     if (evento.detail.vista === "sonido") refrescarSonido();
+    else silenciarMuestra();
   });
 }

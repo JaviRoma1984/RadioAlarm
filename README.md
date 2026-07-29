@@ -40,6 +40,8 @@ RadioAlarm/
 │   ├── app.js          Punto de entrada
 │   ├── theme.js        Conmutador día/noche
 │   ├── store.js        Persistencia sobre localStorage
+│   ├── audio/
+│   │   └── sintetizador.js  Genera los tonos con Web Audio
 │   ├── datos/
 │   │   └── tonos.js    Catálogo de tonos
 │   ├── model/
@@ -47,6 +49,7 @@ RadioAlarm/
 │   │   └── alarmas.js  Repositorio: altas, bajas y consultas
 │   └── ui/
 │       ├── vistas.js   Navegación entre pantallas
+│       ├── alarmas.js  Vista del listado de alarmas
 │       ├── sonido.js   Vista de opciones de sonido
 │       ├── plegable.js Listas que se despliegan y encogen
 │       ├── layout.js   Medidas de la barra inferior
@@ -77,8 +80,10 @@ npm test
 ```
 
 Node puro, sin dependencias ni framework. Cubren el saneado del dato, el cálculo del
-próximo disparo (incluidos el cambio de horario y el caso «solo hoy y la hora ya pasada») y
-el repositorio con un `localStorage` de mentira.
+próximo disparo (incluidos el cambio de horario y el caso «solo hoy y la hora ya pasada»),
+el repositorio con un `localStorage` de mentira y la correspondencia entre el catálogo de
+tonos y los patrones del sintetizador —para que no se pueda añadir un tono elegible que no
+suene—.
 
 No hay `npm install`: `package.json` solo existe para declarar `"type": "module"` —que es
 lo que hace que Node lea los archivos `.js` como módulos— y el atajo de las pruebas. La
@@ -106,9 +111,9 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 |---|---|---|
 | 1 | Esqueleto, tokens de diseño, tema día/noche y navegación entre vistas | ✅ Hecha |
 | 2 | Modelo de datos y almacenamiento | ✅ Hecha |
-| 3 | Pantalla principal con el listado de alarmas | Pendiente |
+| 3 | Pantalla principal con el listado de alarmas | ✅ Hecha |
 | 4 | Editor de alarma | Pendiente |
-| 5 | Fuentes de sonido: tonos sintetizados, canción y radio | Pendiente |
+| 5 | Fuentes de sonido: tonos sintetizados, canción y radio | 🟡 Los tonos ya suenan |
 | 6 | Motor de disparo y pantalla de alarma sonando | Pendiente |
 | 7 | Cronómetro y temporizador de cuenta atrás | Pendiente |
 | 8 | Convertirla en PWA instalable | Pendiente |
