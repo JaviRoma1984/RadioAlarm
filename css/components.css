@@ -287,9 +287,12 @@
   gap: var(--space-2);
 }
 
-/* El alto en píxeles lo pone `js/ui/plegable.js`; aquí solo se recorta y anima. */
+/* El alto en píxeles lo pone `js/ui/plegable.js`; aquí solo se recorta y anima.
+   La separación superior va como relleno propio y no como margen: con la lista
+   cerrada queda recortada por `overflow`, así que no deja un hueco vacío. */
 .opciones--plegable {
   overflow: hidden;
+  padding-top: var(--space-3);
   transition: max-height var(--dur-slow) var(--ease);
 }
 
@@ -395,9 +398,22 @@
   border: 1px solid var(--border);
 }
 
+/* Rótulo a la izquierda de la fila; el valor queda alineado a la derecha. */
+.recurso__etiqueta {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
 .recurso__valor {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* Cuando la fila lleva rótulo, el valor es el protagonista. */
+.recurso__etiqueta + .recurso__valor {
+  font-weight: var(--weight-semibold);
+  text-align: right;
 }
 
 .recurso__valor--vacio {

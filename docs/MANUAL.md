@@ -49,16 +49,17 @@ El botón queda resaltado en turquesa mientras estás en esta pantalla.
 
 ### Tono
 
-Los nueve timbres incluidos. Pulsa el que quieras y quedará marcado con el círculo
-turquesa. **Clásico** viene seleccionado de fábrica, así que siempre hay un tono elegido.
+De entrada el apartado muestra solo tres cosas: la descripción, la línea **Tono elegido**
+con el nombre del que tienes puesto, y el botón **Explorar tonos**.
 
-Para no ocupar toda la pantalla, la lista aparece **encogida mostrando los tres primeros**.
-El botón **Ver los 9 tonos**, arriba a la derecha del apartado, la despliega; una vez
-abierta, el mismo botón pasa a decir **Ver menos** y la vuelve a encoger. La flecha gira
-para indicar en qué estado está.
+Al pulsar **Explorar tonos** se despliega el listado completo de los nueve timbres. El
+botón pasa a decir **Ocultar tonos** y la flecha gira, para que se vea de un vistazo si
+está abierto o cerrado.
 
-Si el tono que tienes elegido no está entre los tres primeros, la lista se abre desplegada
-sola, para que puedas ver cuál está marcado.
+**Solo puede haber un tono seleccionado.** Al pulsar uno nuevo, el anterior se deselecciona
+automáticamente, y no hay forma de quedarse sin ninguno: **Clásico** viene puesto de
+fábrica y, si pulsas el que ya está marcado, sigue marcado. La línea **Tono elegido** se
+actualiza al instante, así que puedes cerrar el listado y seguir viendo cuál tienes.
 
 | Tono | Cómo suena |
 |---|---|

@@ -17,8 +17,11 @@ import { volverAlInicio } from "./vistas.js";
 
 const CLAVE = "sonido";
 
-/** Tonos que se ven con la lista encogida. */
-const TONOS_VISIBLES = 3;
+/**
+ * Tonos visibles con la lista encogida. A cero: el apartado muestra solo la
+ * descripción, el tono elegido y el botón «Explorar tonos», que despliega todos.
+ */
+const TONOS_VISIBLES = 0;
 
 /**
  * Catálogo de tonos incluidos.
@@ -93,7 +96,16 @@ const POR_DEFECTO = {
 
 /** Configuración de sonido guardada, completada con los valores por defecto. */
 export function configuracionSonido() {
-  return { ...POR_DEFECTO, ...(leer(CLAVE) ?? {}) };
+  const configuracion = { ...POR_DEFECTO, ...(leer(CLAVE) ?? {}) };
+
+  // Siempre tiene que haber un tono válido seleccionado. Si lo guardado apunta
+  // a un tono que ya no existe (catálogo cambiado, dato manipulado), se vuelve
+  // al de fábrica en lugar de quedarse sin ninguno marcado.
+  if (!TONOS.some((tono) => tono.id === configuracion.tono)) {
+    configuracion.tono = TONO_POR_DEFECTO;
+  }
+
+  return configuracion;
 }
 
 /** Borrador en edición: copia de lo guardado hasta que se pulse «Guardar». */
@@ -128,6 +140,7 @@ function pintarTonos() {
       radio.checked = tono.id === borrador.tono;
       radio.addEventListener("change", () => {
         borrador.tono = tono.id;
+        pintarRecursos(); // refleja el cambio en la línea del tono elegido
         marcarCambios();
       });
 
@@ -140,17 +153,24 @@ function pintarTonos() {
     boton: document.getElementById("btn-plegar-tonos"),
     etiqueta: document.getElementById("btn-plegar-tonos-texto"),
     visibles: TONOS_VISIBLES,
-    textoAbrir: (total) => `Ver los ${total} tonos`,
+    textoAbrir: () => "Explorar tonos",
+    textoCerrar: "Ocultar tonos",
   });
 
-  // Si el tono elegido queda fuera de los primeros, la lista se abre
-  // desplegada: si no, no se vería cuál está marcado.
-  const posicion = TONOS.findIndex((tono) => tono.id === borrador.tono);
-  plegableTonos.refrescar({ desplegado: posicion >= TONOS_VISIBLES });
+  // La lista arranca cerrada: el tono elegido se ve en su propia línea.
+  plegableTonos.refrescar({ desplegado: false });
 }
 
-/** Refresca los rótulos de canción y emisora con lo que haya en el borrador. */
+/** Nombre del tono elegido, para verlo con la lista cerrada. */
+function nombreTono(id) {
+  return TONOS.find((tono) => tono.id === id)?.nombre ?? id;
+}
+
+/** Refresca los rótulos de tono, canción y emisora con lo que haya en el borrador. */
 function pintarRecursos() {
+  const tono = document.getElementById("valor-tono");
+  if (tono) tono.textContent = nombreTono(borrador.tono);
+
   const cancion = document.getElementById("valor-cancion");
   if (cancion) {
     cancion.textContent = borrador.cancion?.nombre ?? "Ninguna seleccionada";
@@ -190,8 +210,7 @@ function guardar() {
 
   if (escribir(CLAVE, borrador)) {
     marcarCambios(false);
-    const nombre = TONOS.find((t) => t.id === borrador.tono)?.nombre ?? borrador.tono;
-    toast(`Guardado · tono ${nombre}`);
+    toast(`Guardado · tono ${nombreTono(borrador.tono)}`);
   } else {
     toast("No se pudo guardar: el navegador bloquea el almacenamiento", {
       tipo: "error",

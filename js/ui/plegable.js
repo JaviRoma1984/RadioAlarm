@@ -42,6 +42,9 @@ export function crearPlegable({
 
   /** Alto que ocupa el contenedor mostrando solo los elementos visibles. */
   function altoPlegado(elementos) {
+    // `visibles: 0` esconde la lista entera: el contenedor queda a cero.
+    if (visibles <= 0) return 0;
+
     const arriba = contenedor.getBoundingClientRect().top;
     const corte = elementos[visibles - 1].getBoundingClientRect().bottom;
     return corte - arriba + HOLGURA;
