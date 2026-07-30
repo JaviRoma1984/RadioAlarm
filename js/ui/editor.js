@@ -8,18 +8,18 @@
  * Igual que en la vista de sonido, los cambios se llevan en un borrador y solo
  * se persisten al pulsar «Guardar cambios»; «Volver atrás» los descarta.
  *
- * Estado: la elección de canción y de emisora todavía no tiene selector de
- * archivos ni reproductor de streams —llegan en la Fase 5—, así que sus
- * botones «Elegir» avisan de la fase. El resto del editor ya es real.
- *
  * El tono no se elige aquí: solo se muestra el que esté puesto como favorito
  * en Opciones de sonido. Esa pantalla es el único sitio donde se escoge, para
- * no duplicar el mismo listado de nueve tonos en dos pantallas distintas.
+ * no duplicar el mismo listado de nueve tonos en dos pantallas distintas. La
+ * canción y la emisora sí son propias de cada alarma: parten del favorito
+ * global al crearla, pero cada una puede cambiarlas sin afectar a las demás.
  */
 
 import { DIAS_SEMANA, FUENTE, POSPONER, REPETICION, crearAlarma } from "../model/alarma.js";
 import { nombreTono } from "../datos/tonos.js";
 import { borrarAlarma, guardarAlarma, obtenerAlarma } from "../model/alarmas.js";
+import { crearSelectorCancion } from "./selectorCancion.js";
+import { crearSelectorEmisora } from "./selectorEmisora.js";
 import { configuracionSonido } from "./sonido.js";
 import { toast } from "./toast.js";
 import { mostrarVista, volverAlInicio } from "./vistas.js";
@@ -31,6 +31,24 @@ let borrador = crearAlarma();
 let editandoId = null;
 
 let hayCambios = false;
+
+const selectorCancion = crearSelectorCancion({
+  contenedor: document.getElementById("editor-cancion"),
+  obtener: () => borrador.sonido.cancion,
+  establecer(recurso) {
+    borrador.sonido.cancion = recurso;
+    marcarCambios();
+  },
+});
+
+const selectorEmisora = crearSelectorEmisora({
+  contenedor: document.getElementById("editor-radio"),
+  obtener: () => borrador.sonido.emisora,
+  establecer(recurso) {
+    borrador.sonido.emisora = recurso;
+    marcarCambios();
+  },
+});
 
 /* -------------------------------------------------------------------------- */
 /*  Utilidades                                                                */
@@ -141,14 +159,6 @@ function pintarPosponer() {
   );
 }
 
-function pintarRecurso(id, recurso) {
-  const nodo = document.getElementById(id);
-  if (!nodo) return;
-
-  nodo.textContent = recurso?.nombre ?? "Ninguna seleccionada";
-  nodo.classList.toggle("recurso__valor--vacio", !recurso);
-}
-
 function pintar() {
   const nombre = document.getElementById("editor-nombre");
   if (nombre) nombre.value = editandoId ? borrador.nombre : "";
@@ -169,8 +179,8 @@ function pintar() {
     .forEach((radio) => (radio.checked = radio.value === borrador.sonido.tipo));
   mostrarFuente(borrador.sonido.tipo);
   pintarTono();
-  pintarRecurso("editor-valor-cancion", borrador.sonido.cancion);
-  pintarRecurso("editor-valor-radio", borrador.sonido.emisora);
+  selectorCancion.pintar();
+  selectorEmisora.pintar();
 
   const vibracion = document.getElementById("editor-vibracion");
   if (vibracion) vibracion.checked = borrador.vibracion;
@@ -200,6 +210,11 @@ function abrir(id) {
     borrador = structuredClone(existente);
   } else {
     borrador = crearAlarma({ hora: siguienteHoraEnPunto() });
+    // La canción y la emisora parten del favorito global; el tono no hace
+    // falta copiarlo aquí porque nunca se guarda uno propio por alarma.
+    const favoritos = configuracionSonido();
+    borrador.sonido.cancion = favoritos.cancion;
+    borrador.sonido.emisora = favoritos.emisora;
   }
 
   marcarCambios(false);
@@ -241,7 +256,15 @@ function alternarDia(boton) {
   marcarCambios();
 }
 
+/** Detiene cualquier vista previa —canción o emisora— que siguiera sonando. */
+function silenciarTodo() {
+  selectorCancion.detener();
+  selectorEmisora.detener();
+}
+
 function guardar() {
+  silenciarTodo();
+
   const tipoElegido = borrador.sonido.tipo;
   // El tono no se elige en este editor: al guardar se sincroniza con el
   // favorito de Opciones de sonido, que es la única fuente de verdad.
@@ -256,9 +279,9 @@ function guardar() {
 
   const sinDias =
     guardada.repeticion === REPETICION.PERSONALIZADA && guardada.dias.length === 0;
-  // Canción y emisora todavía no se pueden elegir (Fase 5): si se intentó,
-  // el modelo lo sustituye por el tono al guardar. Se avisa para que no
-  // parezca que el cambio se ha perdido sin motivo.
+  // Si se dejó puesta la pestaña Canción o Radio sin elegir nada válido, el
+  // modelo cae al tono al guardar. Se avisa para que no parezca que la
+  // elección se ha perdido sin motivo.
   const sonidoSustituido = tipoElegido !== FUENTE.TONO && guardada.sonido.tipo === FUENTE.TONO;
 
   if (sinDias) {
@@ -266,7 +289,8 @@ function guardar() {
       tipo: "aviso",
     });
   } else if (sonidoSustituido) {
-    toast(`«${guardada.nombre}» guardada con el tono: elegir canción o emisora llega en la Fase 5`, {
+    const fuente = tipoElegido === FUENTE.CANCION ? "una canción" : "una emisora";
+    toast(`«${guardada.nombre}» guardada con el tono: no habías elegido ${fuente}`, {
       tipo: "aviso",
     });
   } else {
@@ -278,6 +302,7 @@ function guardar() {
 }
 
 function volver() {
+  silenciarTodo();
   if (hayCambios) toast("Cambios sin guardar descartados", { tipo: "aviso" });
   volverAlInicio();
 }
@@ -288,6 +313,8 @@ function borrarDesdeEditor() {
   if (!window.confirm(`¿Borrar la alarma «${borrador.nombre}» de las ${borrador.hora}?`)) {
     return;
   }
+
+  silenciarTodo();
 
   if (borrarAlarma(editandoId)) toast(`Alarma «${borrador.nombre}» borrada`);
   volverAlInicio();
@@ -357,6 +384,7 @@ export function iniciarEditor() {
 
   document.addEventListener("vista:cambiada", (evento) => {
     if (evento.detail.vista === "editor") abrir(evento.detail.id ?? null);
+    else silenciarTodo();
   });
 }
 

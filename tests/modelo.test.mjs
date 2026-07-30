@@ -262,6 +262,26 @@ prueba("canción sin archivo cae en el tono", () => {
   igual(sonido.cancion, null);
 });
 
+prueba("canción con nombre pero sin id cae en el tono", () => {
+  // Sin id no hay forma de recuperar el audio de IndexedDB: es lo mismo que
+  // no tener canción.
+  const sonido = normalizarAlarma({
+    sonido: { tipo: FUENTE.CANCION, cancion: { nombre: "trabajo.mp3" } },
+  }).sonido;
+
+  igual(sonido.tipo, FUENTE.TONO);
+  igual(sonido.cancion, null);
+});
+
+prueba("canción completa se conserva", () => {
+  const sonido = normalizarAlarma({
+    sonido: { tipo: FUENTE.CANCION, cancion: { nombre: "trabajo.mp3", id: "abc123" } },
+  }).sonido;
+
+  igual(sonido.tipo, FUENTE.CANCION);
+  igual(sonido.cancion, { nombre: "trabajo.mp3", id: "abc123" });
+});
+
 prueba("emisora sin URL cae en el tono", () => {
   const sonido = normalizarAlarma({
     sonido: { tipo: FUENTE.RADIO, emisora: { nombre: "Radio 3" } },
@@ -285,13 +305,13 @@ prueba("cambiar de tipo no borra las otras fuentes", () => {
     sonido: {
       tipo: FUENTE.TONO,
       tono: "marimba",
-      cancion: { nombre: "cancion.mp3" },
+      cancion: { nombre: "cancion.mp3", id: "abc123" },
       emisora: { nombre: "Radio 3", url: "https://x/y.mp3" },
     },
   }).sonido;
 
   igual(sonido.tono, "marimba");
-  igual(sonido.cancion, { nombre: "cancion.mp3" });
+  igual(sonido.cancion, { nombre: "cancion.mp3", id: "abc123" });
   igual(sonido.emisora.nombre, "Radio 3");
 });
 

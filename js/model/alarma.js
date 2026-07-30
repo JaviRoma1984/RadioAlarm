@@ -142,7 +142,12 @@ function sanearRecurso(valor, conUrl = false) {
   const nombre = typeof valor.nombre === "string" ? valor.nombre.trim() : "";
   if (!nombre) return null;
 
-  if (!conUrl) return { nombre };
+  if (!conUrl) {
+    // Una canción necesita el id con el que se guardó su audio en IndexedDB
+    // (js/store/audioBlobs.js); sin él no hay forma de recuperar el archivo.
+    const id = typeof valor.id === "string" ? valor.id.trim() : "";
+    return id ? { nombre, id } : null;
+  }
 
   const url = typeof valor.url === "string" ? valor.url.trim() : "";
   return url ? { nombre, url } : null;

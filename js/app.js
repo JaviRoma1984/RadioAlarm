@@ -1,8 +1,9 @@
 /**
  * RadioAlarm · Punto de entrada
  *
- * Estado del proyecto: Fase 4 de 10 — listado y editor de alarma completos. El
- * motor que las hace sonar llega en la Fase 6.
+ * Estado del proyecto: Fase 5 de 10 — fuentes de sonido completas: tono,
+ * canción propia y emisora de radio. El motor que las hace sonar llega en la
+ * Fase 6.
  */
 
 import { iniciarTema } from "./theme.js";
@@ -17,8 +18,6 @@ import { iniciarVistas } from "./ui/vistas.js";
 const PENDIENTES = {
   crono: "El cronómetro llega en la Fase 7",
   "cuenta-atras": "El temporizador de cuenta atrás llega en la Fase 7",
-  "elegir-cancion": "Elegir canciones de tu carpeta llega en la Fase 5",
-  "elegir-radio": "Las emisoras de radio llegan en la Fase 5",
 };
 
 /** Marca la cabecera cuando el contenido se ha desplazado, para dibujar su borde. */

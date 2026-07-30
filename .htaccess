@@ -1,0 +1,15 @@
+# RadioAlarm · Solo para el servidor local de XAMPP
+#
+# Sin esto, Chrome cachea agresivamente los .js y .css basándose en
+# Last-Modified (no hay Cache-Control explícito), así que un cambio recién
+# guardado puede tardar varios minutos en verse aunque se recargue la página.
+# En desarrollo interesa lo contrario: que cada recarga traiga el archivo tal
+# cual está en disco.
+#
+# GitHub Pages no lee este archivo (no es Apache), así que no afecta a la
+# aplicación publicada.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|css|js)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>

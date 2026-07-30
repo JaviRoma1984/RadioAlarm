@@ -1,21 +1,25 @@
 /**
  * RadioAlarm · Vista de opciones de sonido
  *
- * Esta pantalla configura el sonido *favorito*: el tono, la canción y la
- * emisora de las que parte una alarma nueva. Cada alarma puede luego cambiarlo
- * en su propio editor (Fase 4) sin afectar a este favorito global.
+ * El tono es una única configuración global: se elige aquí y ninguna alarma
+ * puede tener uno distinto (por eso su editor solo lo muestra, no lo deja
+ * cambiar). La canción y la emisora, en cambio, son solo las *favoritas*: la
+ * de partida al crear una alarma, que cada alarma puede cambiar después en su
+ * propio editor sin afectar a este favorito.
  *
  * Los cambios se llevan en un borrador y solo se persisten al pulsar «Guardar
  * cambios»; «Volver atrás» los descarta.
  *
- * Estado: la selección de tono ya es real, suena al elegirla y se guarda. La
- * elección de canción y de emisora necesita el selector de archivos y el
- * reproductor de streams, que llegan en la Fase 5.
+ * Las tres fuentes son reales: el tono suena al elegirlo, la canción se
+ * guarda en el dispositivo (`js/store/audioBlobs.js`) y la emisora se puede
+ * probar antes de guardarla.
  */
 
 import { TONO_POR_DEFECTO, existeTono, nombreTono } from "../datos/tonos.js";
 import { leer, escribir } from "../store.js";
 import { crearPlegable } from "./plegable.js";
+import { crearSelectorCancion } from "./selectorCancion.js";
+import { crearSelectorEmisora } from "./selectorEmisora.js";
 import { crearSelectorTono } from "./selectorTono.js";
 import { toast } from "./toast.js";
 import { volverAlInicio } from "./vistas.js";
@@ -30,8 +34,8 @@ const TONOS_VISIBLES = 0;
 
 const POR_DEFECTO = {
   tono: TONO_POR_DEFECTO,
-  cancion: null, // { nombre } cuando la Fase 5 permita elegirla
-  emisora: null, // { nombre, url } cuando la Fase 5 permita elegirla
+  cancion: null, // { nombre, id }
+  emisora: null, // { nombre, url }
 };
 
 /** Configuración de sonido guardada, completada con los valores por defecto. */
@@ -70,6 +74,24 @@ const selectorTono = crearSelectorTono({
   },
 });
 
+const selectorCancion = crearSelectorCancion({
+  contenedor: document.getElementById("sonido-cancion"),
+  obtener: () => borrador.cancion,
+  establecer(recurso) {
+    borrador.cancion = recurso;
+    marcarCambios();
+  },
+});
+
+const selectorEmisora = crearSelectorEmisora({
+  contenedor: document.getElementById("sonido-emisora"),
+  obtener: () => borrador.emisora,
+  establecer(recurso) {
+    borrador.emisora = recurso;
+    marcarCambios();
+  },
+});
+
 function pintarTonos() {
   const lista = document.getElementById("lista-tonos");
   if (!lista) return;
@@ -89,22 +111,10 @@ function pintarTonos() {
   plegableTonos.refrescar({ desplegado: false });
 }
 
-/** Refresca los rótulos de tono, canción y emisora con lo que haya en el borrador. */
+/** Refresca la línea del tono elegido (canción y emisora se pintan solas). */
 function pintarRecursos() {
   const tono = document.getElementById("valor-tono");
   if (tono) tono.textContent = nombreTono(borrador.tono);
-
-  const cancion = document.getElementById("valor-cancion");
-  if (cancion) {
-    cancion.textContent = borrador.cancion?.nombre ?? "Ninguna seleccionada";
-    cancion.classList.toggle("recurso__valor--vacio", !borrador.cancion);
-  }
-
-  const emisora = document.getElementById("valor-emisora");
-  if (emisora) {
-    emisora.textContent = borrador.emisora?.nombre ?? "Ninguna seleccionada";
-    emisora.classList.toggle("recurso__valor--vacio", !borrador.emisora);
-  }
 }
 
 /** Activa el botón de guardar en cuanto hay algo que guardar. */
@@ -119,14 +129,23 @@ export function refrescarSonido() {
   marcarCambios(false);
   pintarTonos();
   pintarRecursos();
+  selectorCancion.pintar();
+  selectorEmisora.pintar();
 }
 
 /* -------------------------------------------------------------------------- */
 /*  Acciones                                                                  */
 /* -------------------------------------------------------------------------- */
 
-function guardar() {
+/** Detiene cualquier vista previa —tono, canción o emisora— que siguiera sonando. */
+function silenciarTodo() {
   selectorTono.silenciar();
+  selectorCancion.detener();
+  selectorEmisora.detener();
+}
+
+function guardar() {
+  silenciarTodo();
 
   if (!hayCambios) {
     toast("No había cambios que guardar");
@@ -149,7 +168,7 @@ function guardar() {
 }
 
 function volver() {
-  selectorTono.silenciar();
+  silenciarTodo();
   if (hayCambios) toast("Cambios sin guardar descartados", { tipo: "aviso" });
   refrescarSonido();
   volverAlInicio();
@@ -165,6 +184,6 @@ export function iniciarSonido() {
   // se corta cualquier tono de muestra que siguiera sonando.
   document.addEventListener("vista:cambiada", (evento) => {
     if (evento.detail.vista === "sonido") refrescarSonido();
-    else selectorTono.silenciar();
+    else silenciarTodo();
   });
 }

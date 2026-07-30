@@ -1,6 +1,6 @@
 # RadioAlarm
 
-Despertador web que suena con un **tono clásico**, una **canción de tu propia carpeta**
+Despertador web que suena con un **tono clásico**, una **canción de tu dispositivo**
 o directamente una **emisora de radio**.
 
 Es una aplicación web estática (HTML + CSS + JavaScript, sin backend), así que el mismo
@@ -22,8 +22,12 @@ Con Apache arrancado desde el panel de XAMPP:
 <http://localhost/RadioAlarm/>
 
 > Servirla desde `http://localhost` (y no abriendo el archivo directamente) es
-> **obligatorio**: los módulos de JavaScript, el service worker y el selector de carpetas
-> solo funcionan en un contexto seguro.
+> **obligatorio**: los módulos de JavaScript no cargan sobre `file://`, e IndexedDB y el
+> futuro service worker solo funcionan en un contexto seguro.
+>
+> El `.htaccess` de la raíz desactiva la caché del navegador para `.html`, `.css` y `.js`:
+> sin él, Chrome puede tardar varios minutos en servir un archivo recién guardado. Solo
+> afecta a este servidor local (Apache); GitHub Pages no lo lee.
 
 ---
 
@@ -31,47 +35,58 @@ Con Apache arrancado desde el panel de XAMPP:
 
 ```
 RadioAlarm/
-├── index.html          Pantalla principal
+├── .htaccess            Desactiva la caché del navegador (solo desarrollo local)
+├── index.html           Pantalla principal
 ├── css/
-│   ├── tokens.css      Tokens de diseño y temas día/noche
-│   ├── base.css        Reinicio, tipografía y estructura
-│   └── components.css  Componentes reutilizables
+│   ├── tokens.css       Tokens de diseño y temas día/noche
+│   ├── base.css         Reinicio, tipografía y estructura
+│   └── components.css   Componentes reutilizables
 ├── js/
-│   ├── app.js          Punto de entrada
-│   ├── theme.js        Conmutador día/noche
-│   ├── store.js        Persistencia sobre localStorage
+│   ├── app.js           Punto de entrada
+│   ├── theme.js         Conmutador día/noche
+│   ├── store.js         Persistencia sobre localStorage
 │   ├── audio/
-│   │   └── sintetizador.js  Genera los tonos con Web Audio
+│   │   ├── sintetizador.js  Genera los tonos con Web Audio
+│   │   └── reproductor.js  Vista previa: reproduce una canción o prueba una emisora
 │   ├── datos/
-│   │   └── tonos.js    Catálogo de tonos
+│   │   └── tonos.js     Catálogo de tonos
+│   ├── store/
+│   │   └── audioBlobs.js  Guarda los archivos de canción en IndexedDB
 │   ├── model/
-│   │   ├── alarma.js   Esquema, saneado y cálculo del próximo disparo
-│   │   └── alarmas.js  Repositorio: altas, bajas y consultas
+│   │   ├── alarma.js    Esquema, saneado y cálculo del próximo disparo
+│   │   └── alarmas.js   Repositorio: altas, bajas y consultas
 │   └── ui/
-│       ├── vistas.js      Navegación entre pantallas
-│       ├── alarmas.js     Vista del listado de alarmas
-│       ├── editor.js      Editor de alarma: crear y editar
-│       ├── sonido.js      Vista de opciones de sonido (tono favorito)
-│       ├── selectorTono.js  Widget de tono: lista, selección y reproducción
-│       ├── plegable.js    Listas que se despliegan y encogen
-│       ├── layout.js      Medidas de la barra inferior
-│       └── toast.js       Avisos flotantes
+│       ├── vistas.js       Navegación entre pantallas
+│       ├── alarmas.js      Vista del listado de alarmas
+│       ├── editor.js       Editor de alarma: crear y editar
+│       ├── sonido.js       Vista de opciones de sonido (tono, canción y emisora favoritos)
+│       ├── selectorTono.js    Widget de tono: lista, selección y reproducción
+│       ├── selectorCancion.js Widget de canción: elegir archivo, guardar, escuchar
+│       ├── selectorEmisora.js Widget de emisora: nombre, URL y probar
+│       ├── plegable.js     Listas que se despliegan y encogen
+│       ├── layout.js       Medidas de la barra inferior
+│       └── toast.js        Avisos flotantes
 ├── tests/
-│   └── modelo.test.mjs Pruebas del modelo
+│   └── modelo.test.mjs  Pruebas del modelo
 └── docs/
-    └── MANUAL.md       Manual de uso
+    └── MANUAL.md        Manual de uso
 ```
 
 ### Capas
 
 ```
-ui/  →  model/  →  store.js  →  localStorage
-        datos/
+ui/  →  model/  →  store.js       →  localStorage   (alarmas, tema, favoritos)
+        datos/  →  store/audioBlobs.js  →  IndexedDB      (archivos de canción)
 ```
 
 La interfaz nunca lee el almacenamiento directamente: pasa por `model/`, que
 devuelve alarmas ya saneadas. `model/alarma.js` es lógica pura —sin DOM y sin
 almacenamiento— para poder probarla fuera del navegador.
+
+Los audios de canción no viven en `localStorage` —tiene una cuota de pocos MB, y un
+archivo de audio ya la agotaría— sino en IndexedDB, vía `store/audioBlobs.js`. Cada
+alarma guarda solo el `id` de su canción; el archivo en sí se busca en IndexedDB al
+elegirlo, al escucharlo y —en la Fase 6— al sonar.
 
 ---
 
@@ -81,11 +96,16 @@ almacenamiento— para poder probarla fuera del navegador.
 npm test
 ```
 
-Node puro, sin dependencias ni framework. Cubren el saneado del dato, el cálculo del
-próximo disparo (incluidos el cambio de horario y el caso «solo hoy y la hora ya pasada»),
-el repositorio con un `localStorage` de mentira y la correspondencia entre el catálogo de
-tonos y los patrones del sintetizador —para que no se pueda añadir un tono elegible que no
-suene—.
+Node puro, sin dependencias ni framework. Cubren el saneado del dato (incluida la canción,
+que necesita un `id` válido de IndexedDB o se descarta), el cálculo del próximo disparo
+(incluidos el cambio de horario y el caso «solo hoy y la hora ya pasada»), el repositorio
+con un `localStorage` de mentira y la correspondencia entre el catálogo de tonos y los
+patrones del sintetizador —para que no se pueda añadir un tono elegible que no suene—.
+
+Lo que no cubren: todo lo que toca IndexedDB, `<input type="file">` o el elemento
+`<audio>` de la vista previa (`selectorCancion.js`, `selectorEmisora.js`,
+`reproductor.js`, `store/audioBlobs.js`). Esas piezas se han probado a mano en el
+navegador; Node no tiene ni IndexedDB ni un DOM real sin añadir dependencias.
 
 No hay `npm install`: `package.json` solo existe para declarar `"type": "module"` —que es
 lo que hace que Node lea los archivos `.js` como módulos— y el atajo de las pruebas. La
@@ -115,7 +135,7 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 2 | Modelo de datos y almacenamiento | ✅ Hecha |
 | 3 | Pantalla principal con el listado de alarmas | ✅ Hecha |
 | 4 | Editor de alarma | ✅ Hecha |
-| 5 | Fuentes de sonido: tonos sintetizados, canción y radio | 🟡 Los tonos ya suenan |
+| 5 | Fuentes de sonido: tonos sintetizados, canción y radio | ✅ Hecha |
 | 6 | Motor de disparo y pantalla de alarma sonando | Pendiente |
 | 7 | Cronómetro y temporizador de cuenta atrás | Pendiente |
 | 8 | Convertirla en PWA instalable | Pendiente |
@@ -138,9 +158,16 @@ Documentadas aquí desde el principio porque condicionan el diseño:
   autoplay de los navegadores).
 - **En GitHub Pages, las emisoras deben usar `https://`.** Los streams `http://` se bloquean
   por contenido mixto.
-- **El selector de carpetas no existe en móvil.** Allí las canciones se importan y quedan
-  guardadas dentro de la propia app.
 - **Los tonos de fábrica del móvil no son accesibles desde el navegador.** Viven en una
   carpeta protegida del sistema y solo `RingtoneManager` (nativo) los expone. Por eso los
   tonos incluidos se generan por síntesis con Web Audio, y la lista completa del sistema
   no llega hasta la Fase 10.
+- **Los archivos de canción se guardan enteros en el dispositivo**, vía IndexedDB: no hay
+  selector de carpetas ni acceso en vivo al sistema de archivos (eso exigiría volver a
+  pedir permiso en cada sesión y no funciona en móvil). La contrapartida es la cuota de
+  almacenamiento del navegador, normalmente holgada pero no ilimitada.
+- **Un audio de canción reemplazado o quitado no se borra solo de IndexedDB.** Una alarma
+  nueva parte del mismo archivo que el favorito global (no de una copia), así que borrar
+  "el anterior" al elegir uno distinto podría borrar el de otra alarma sin que nadie lo
+  pidiera. Sin contar cuántos sitios usan cada archivo no hay forma segura de saber cuándo
+  ya no lo usa nadie, así que de momento se queda guardado.

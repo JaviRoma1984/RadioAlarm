@@ -5,11 +5,11 @@
  * opciones de sonido como el modelo de alarmas, así que viven aparte para que
  * ninguno de los dos dependa del otro.
  *
- * En la Fase 5 cada tono se generará por síntesis con Web Audio en lugar de
- * empaquetar archivos de audio: no dependemos de bancos de sonido con licencia,
- * no pesan nada, funcionan sin conexión y la subida progresiva de volumen sale
- * de serie. Los sonidos de alarma clásicos son ondas simples, así que se
- * reproducen bien sintetizados.
+ * Cada tono se genera por síntesis con Web Audio (`js/audio/sintetizador.js`)
+ * en lugar de empaquetar archivos de audio: no dependemos de bancos de sonido
+ * con licencia, no pesan nada, funcionan sin conexión y la subida progresiva
+ * de volumen sale de serie. Los sonidos de alarma clásicos son ondas simples,
+ * así que se reproducen bien sintetizados.
  *
  * Los tonos de fábrica del móvil NO se pueden leer desde la web: viven en una
  * carpeta protegida del sistema y solo `RingtoneManager` (nativo) los expone.

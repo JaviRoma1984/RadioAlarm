@@ -170,24 +170,14 @@
 
           <section class="panel">
             <h3 class="panel__titulo">Canción</h3>
-            <p class="panel__ayuda">Un archivo de audio de una carpeta tuya.</p>
-            <div class="recurso">
-              <span class="recurso__valor" id="valor-cancion">Ninguna seleccionada</span>
-              <button class="btn btn--suave" type="button" data-accion="elegir-cancion">
-                Elegir
-              </button>
-            </div>
+            <p class="panel__ayuda">Un archivo de audio de tu dispositivo.</p>
+            <div id="sonido-cancion"></div>
           </section>
 
           <section class="panel">
             <h3 class="panel__titulo">Emisora de radio</h3>
             <p class="panel__ayuda">Sonará en directo en cuanto salte la alarma.</p>
-            <div class="recurso">
-              <span class="recurso__valor" id="valor-emisora">Ninguna seleccionada</span>
-              <button class="btn btn--suave" type="button" data-accion="elegir-radio">
-                Elegir
-              </button>
-            </div>
+            <div id="sonido-emisora"></div>
           </section>
 
           <div class="acciones">
@@ -265,15 +255,9 @@
               <p class="panel__ayuda">Se cambia desde Sonido, en la barra inferior.</p>
             </div>
 
-            <div class="recurso" id="editor-cancion" hidden>
-              <span class="recurso__valor" id="editor-valor-cancion">Ninguna seleccionada</span>
-              <button class="btn btn--suave" type="button" data-accion="elegir-cancion">Elegir</button>
-            </div>
+            <div id="editor-cancion" hidden></div>
 
-            <div class="recurso" id="editor-radio" hidden>
-              <span class="recurso__valor" id="editor-valor-radio">Ninguna seleccionada</span>
-              <button class="btn btn--suave" type="button" data-accion="elegir-radio">Elegir</button>
-            </div>
+            <div id="editor-radio" hidden></div>
           </section>
 
           <section class="panel">

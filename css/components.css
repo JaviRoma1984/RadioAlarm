@@ -553,6 +553,7 @@
 
 .recurso {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
@@ -584,6 +585,55 @@
 .recurso__valor--vacio {
   color: var(--text-faint);
   font-style: italic;
+}
+
+/* Fila de botones a la derecha del recurso (Escuchar/Quitar/Elegir, o
+   Probar/Quitar). Cuando el recurso no cabe en una línea, se van debajo. */
+.recurso__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.btn--suave:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn--suave:disabled:hover {
+  border-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Campos de la emisora (nombre y URL)
+   -------------------------------------------------------------------------- */
+
+.campo-emisora {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.campo-emisora__input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.campo-emisora__input::placeholder {
+  color: var(--text-faint);
+}
+
+.campo-emisora__input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
 }
 
 /* --------------------------------------------------------------------------
