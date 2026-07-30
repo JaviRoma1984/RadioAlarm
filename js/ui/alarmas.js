@@ -31,18 +31,20 @@ let ultimas = [];
 /* -------------------------------------------------------------------------- */
 
 /**
- * «Tono · Clásico», «Radio · Radio 3»…
+ * «Tono · Clásico», «Radio · LOS40»…
  *
- * El tono no se guarda de verdad por alarma —se elige una sola vez en
- * Opciones de sonido—, así que aquí se muestra siempre el favorito actual y
- * no el que quedó guardado en la alarma la última vez que se editó.
+ * El tono y la emisora no se guardan de verdad por alarma —cada uno se elige
+ * una sola vez en Opciones de sonido—, así que aquí se muestra siempre el
+ * favorito actual y no el que quedó guardado en la alarma la última vez que
+ * se editó. La canción sí es propia de cada alarma.
  */
 function descripcionSonido(alarma) {
-  const { tipo, cancion, emisora } = alarma.sonido;
+  const { tipo, cancion } = alarma.sonido;
+  const favoritos = configuracionSonido();
 
   if (tipo === FUENTE.CANCION && cancion) return `Canción · ${cancion.nombre}`;
-  if (tipo === FUENTE.RADIO && emisora) return `Radio · ${emisora.nombre}`;
-  return `Tono · ${nombreTono(configuracionSonido().tono)}`;
+  if (tipo === FUENTE.RADIO && favoritos.emisora) return `Radio · ${favoritos.emisora.nombre}`;
+  return `Tono · ${nombreTono(favoritos.tono)}`;
 }
 
 /** Línea inferior de la tarjeta: cuándo sonará, o por qué no va a sonar. */
