@@ -85,6 +85,7 @@ const selectorCancion = crearSelectorCancion({
 
 const selectorEmisora = crearSelectorEmisora({
   contenedor: document.getElementById("sonido-emisora"),
+  name: "sonido-emisora",
   obtener: () => borrador.emisora,
   establecer(recurso) {
     borrador.emisora = recurso;

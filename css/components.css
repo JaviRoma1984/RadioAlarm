@@ -636,6 +636,14 @@
   border-color: var(--accent);
 }
 
+/* Alinea a la derecha el botón «Explorar emisoras» del selector de emisora,
+   debajo de la fila «Emisora elegida». */
+.selector-emisora__plegar {
+  display: flex;
+  justify-content: flex-end;
+  margin: var(--space-2) 0 var(--space-3);
+}
+
 /* --------------------------------------------------------------------------
    Editor de alarma · nombre y hora
    Van sueltos, sin la caja de un `.panel`: son el encabezado de la pantalla.

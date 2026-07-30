@@ -50,7 +50,8 @@ RadioAlarm/
 │   │   ├── reproductor.js  Canción y emisora: vista previa, y en bucle con rampa al sonar
 │   │   └── desbloqueo.js   Desbloquea el audio en el primer gesto del usuario
 │   ├── datos/
-│   │   └── tonos.js     Catálogo de tonos
+│   │   ├── tonos.js     Catálogo de tonos
+│   │   └── emisoras.js  Catálogo de emisoras de radio
 │   ├── store/
 │   │   └── audioBlobs.js  Guarda los archivos de canción en IndexedDB
 │   ├── model/
@@ -70,7 +71,7 @@ RadioAlarm/
 │       ├── sonido.js       Vista de opciones de sonido (tono, canción y emisora favoritos)
 │       ├── selectorTono.js    Widget de tono: lista, selección y reproducción
 │       ├── selectorCancion.js Widget de canción: elegir archivo, guardar, escuchar
-│       ├── selectorEmisora.js Widget de emisora: nombre, URL y probar
+│       ├── selectorEmisora.js Widget de emisora: lista de presets + personalizada, y probar
 │       ├── plegable.js     Listas que se despliegan y encogen
 │       ├── layout.js       Medidas de la barra inferior
 │       └── toast.js        Avisos flotantes
@@ -131,6 +132,22 @@ ya no la necesita ninguna.
 Al llegar a cero, la cuenta atrás suena y vibra igual que una alarma —reutiliza
 `sintetizador.js` y `vibracion.js`, con el tono favorito de Opciones de sonido—, pero con su
 propio aviso a pantalla completa: un temporizador no tiene "posponer" ni "se ha perdido".
+
+### Catálogo de emisoras
+
+`datos/emisoras.js` trae siete emisoras de serie —comprobadas una a una, cada una
+respondiendo con `200` y un tipo de audio real, al escribir este archivo—, y
+`selectorEmisora.js` las presenta con el mismo patrón que el selector de tono: lista
+plegada por defecto, selección al estilo radio y reproducción al elegir. La lista termina
+con una opción «Personalizada» que revela los campos de nombre y URL para cualquier otra
+emisora, con su propio botón «Probar».
+
+Quedaron fuera **Cadena 100** y **Rock FM**: sus streams solo existen en HLS (`.m3u8`); se
+comprobó que su propio reproductor oficial usa una librería (hls.js) para convertirlo en
+algo reproducible en Chrome, y un `<audio src>` normal no lo consigue —caería siempre al
+tono—. Añadirlas exigiría sumar esa dependencia solo para dos emisoras, lo que rompería el
+principio de cero dependencias del proyecto. También **Máxima FM**: como emisora nacional
+dejó de emitir en 2019, sustituida por LOS40 Dance, que ya está en la lista.
 
 ---
 
@@ -221,6 +238,12 @@ Documentadas aquí desde el principio porque condicionan el diseño:
   sesión, y la alarma pueda sonar sin que nadie toque nada justo antes.
 - **En GitHub Pages, las emisoras deben usar `https://`.** Los streams `http://` se bloquean
   por contenido mixto.
+- **Las emisoras de serie pueden dejar de funcionar con el tiempo.** Una URL de stream se
+  queda anticuada con facilidad —la emisora cambia de proveedor, cierra el stream
+  antiguo—; se comprobaron todas al escribir `datos/emisoras.js`, pero eso no es una
+  garantía para siempre. Si una deja de sonar, cae al tono automáticamente (no se queda en
+  silencio) y se puede sustituir por su URL nueva, o el usuario puede escribir la suya con
+  la opción «Personalizada».
 - **Los tonos de fábrica del móvil no son accesibles desde el navegador.** Viven en una
   carpeta protegida del sistema y solo `RingtoneManager` (nativo) los expone. Por eso los
   tonos incluidos se generan por síntesis con Web Audio, y la lista completa del sistema
