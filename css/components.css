@@ -1043,3 +1043,108 @@
     transform: translateY(0.5rem) scale(0.97);
   }
 }
+
+/* --------------------------------------------------------------------------
+   Alarma sonando
+   El amarillo corporativo es el color de "alarma sonando" en todo el sistema
+   de diseño; aquí se usa a pantalla completa, no como acento puntual.
+   -------------------------------------------------------------------------- */
+
+.alarma-sonando {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  text-align: center;
+
+  background: linear-gradient(
+    180deg,
+    var(--warn) 0%,
+    color-mix(in srgb, var(--warn) 78%, var(--bg)) 100%
+  );
+  color: var(--text-on-accent);
+
+  animation: alarma-sonando-entra var(--dur-slow) var(--ease);
+}
+
+.alarma-sonando__contenido {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 24rem;
+}
+
+.alarma-sonando__reloj {
+  font-size: 1.25rem;
+  font-weight: var(--weight-semibold);
+  opacity: 0.8;
+}
+
+.alarma-sonando__nombre {
+  font-size: 2.25rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.alarma-sonando__meta {
+  font-size: var(--text-md);
+  opacity: 0.85;
+}
+
+.alarma-sonando__acciones {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.alarma-sonando__descartar {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--text-on-accent);
+  color: var(--warn);
+  font-size: 1.15rem;
+  font-weight: var(--weight-bold);
+  box-shadow: var(--shadow-md);
+  animation: alarma-sonando-pulso 1.6s ease-in-out infinite;
+}
+
+.alarma-sonando__descartar:hover {
+  animation-play-state: paused;
+}
+
+.alarma-sonando__descartar:active {
+  transform: scale(0.96);
+}
+
+.alarma-sonando__posponer {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  border: 2px solid var(--text-on-accent);
+  color: var(--text-on-accent);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.alarma-sonando__posponer:active {
+  transform: scale(0.96);
+}
+
+@keyframes alarma-sonando-entra {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes alarma-sonando-pulso {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}

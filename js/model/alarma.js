@@ -302,6 +302,39 @@ export function proximoDisparo(alarma, desde = new Date()) {
   return null;
 }
 
+/**
+ * Qué alarmas deben sonar entre dos instantes: `(desde, hasta]`, ambos
+ * incluidos salvo `desde`.
+ *
+ * Es el corazón del motor de disparo (Fase 6). Se usa `(desde, hasta]` en vez
+ * de comprobar solo «ahora» para no perder una alarma si el temporizador se
+ * retrasa —pestaña en segundo plano, equipo suspendido—: `desde` es la última
+ * vez que se comprobó, así que cualquier disparo ocurrido mientras tanto se
+ * detecta igual, aunque haya pasado ya el momento exacto.
+ *
+ * Solo puede devolver **una** alarma por cada elemento de `alarmas`, nunca dos
+ * ocurrencias de la misma: `proximoDisparo` solo calcula la siguiente, así que
+ * un hueco larguísimo (equipo suspendido varios días) no hace sonar de golpe
+ * todos los disparos que hubo mientras tanto, solo el más próximo a `desde`.
+ *
+ * @param {object[]} alarmas
+ * @param {Date} desde Última comprobación.
+ * @param {Date} hasta Comprobación actual; normalmente `new Date()`.
+ * @returns {{alarma: object, cuando: Date}[]} Ordenado por `cuando`.
+ */
+export function alarmasQueDebenSonar(alarmas, desde, hasta) {
+  const debidas = [];
+
+  for (const alarma of alarmas) {
+    const cuando = proximoDisparo(alarma, desde);
+    if (cuando && cuando.getTime() <= hasta.getTime()) {
+      debidas.push({ alarma, cuando });
+    }
+  }
+
+  return debidas.sort((a, b) => a.cuando.getTime() - b.cuando.getTime());
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Textos para la interfaz                                                   */
 /* -------------------------------------------------------------------------- */

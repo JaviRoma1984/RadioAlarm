@@ -18,11 +18,20 @@
 /** Volumen general de la síntesis. Los patrones se mueven entre 0 y 1. */
 const VOLUMEN_MAESTRO = 0.28;
 
+/** Volumen de arranque al sonar una alarma: no asustar al despertar. */
+const VOLUMEN_INICIAL_ALARMA = 0.05;
+
+/** Tono de respaldo si `sonarAlarmaTono` recibe un id que no existe. */
+const TONO_RESPALDO = "clasico";
+
 let contexto = null;
 let maestro = null;
 
 /** Osciladores en marcha, para poder cortarlos al pedir otro tono. */
 let activos = [];
+
+/** `setTimeout` que encadena el siguiente ciclo mientras la alarma suena. */
+let temporizadorBucle = null;
 
 /** @returns {boolean} `true` si el navegador puede sintetizar audio. */
 export function audioDisponible() {
@@ -310,4 +319,61 @@ export function reproducirTono(id) {
 /** Ids de los tonos que el sintetizador sabe generar. */
 export function tonosSintetizables() {
   return Object.keys(PATRONES);
+}
+
+/**
+ * Crea o despierta el `AudioContext` sin reproducir nada. Se llama en el
+ * primer gesto del usuario (`js/audio/desbloqueo.js`) para que el navegador
+ * ya lo dé por desbloqueado cuando, más adelante, una alarma tenga que sonar
+ * sin que nadie haya tocado nada justo antes.
+ */
+export function asegurarContextoDesbloqueado() {
+  asegurarContexto();
+}
+
+/**
+ * Hace sonar un tono como alarma: en bucle y con el volumen subiendo poco a
+ * poco. A diferencia de `reproducirTono`, no se detiene solo —hay que llamar
+ * a `pararAlarmaTono()`—.
+ *
+ * Encadena cada ciclo con el anterior mediante `setTimeout`: no es tan preciso
+ * como programar todo por adelantado en la línea de tiempo de Web Audio, pero
+ * para un tono que repite hasta que alguien lo pare la diferencia no se nota,
+ * y así cada ciclo puede volver a calcular su propia duración.
+ *
+ * @param {string} id
+ * @param {{rampaMs?: number}} [opciones]
+ * @returns {boolean} `true` si ha podido arrancar.
+ */
+export function sonarAlarmaTono(id, { rampaMs = 20000 } = {}) {
+  const patron = PATRONES[id] ?? PATRONES[TONO_RESPALDO];
+  if (!patron || !asegurarContexto()) return false;
+
+  pararAlarmaTono();
+  pararTono(); // por si quedaba una muestra de prueba sonando
+
+  const ahora = contexto.currentTime;
+  maestro.gain.cancelScheduledValues(ahora);
+  maestro.gain.setValueAtTime(VOLUMEN_INICIAL_ALARMA, ahora);
+  maestro.gain.linearRampToValueAtTime(VOLUMEN_MAESTRO, ahora + rampaMs / 1000);
+
+  const ciclo = () => {
+    const duracion = patron(contexto.currentTime + 0.02);
+    temporizadorBucle = setTimeout(ciclo, duracion * 1000);
+  };
+  ciclo();
+
+  return true;
+}
+
+/** Para el tono de alarma y devuelve el volumen general a su valor de siempre. */
+export function pararAlarmaTono() {
+  clearTimeout(temporizadorBucle);
+  temporizadorBucle = null;
+  pararTono();
+
+  if (contexto) {
+    maestro.gain.cancelScheduledValues(contexto.currentTime);
+    maestro.gain.setValueAtTime(VOLUMEN_MAESTRO, contexto.currentTime);
+  }
 }

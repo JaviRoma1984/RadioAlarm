@@ -46,15 +46,19 @@ RadioAlarm/
 │   ├── theme.js         Conmutador día/noche
 │   ├── store.js         Persistencia sobre localStorage
 │   ├── audio/
-│   │   ├── sintetizador.js  Genera los tonos con Web Audio
-│   │   └── reproductor.js  Vista previa: reproduce una canción o prueba una emisora
+│   │   ├── sintetizador.js  Genera los tonos con Web Audio; también en bucle y con rampa
+│   │   ├── reproductor.js  Canción y emisora: vista previa, y en bucle con rampa al sonar
+│   │   └── desbloqueo.js   Desbloquea el audio en el primer gesto del usuario
 │   ├── datos/
 │   │   └── tonos.js     Catálogo de tonos
 │   ├── store/
 │   │   └── audioBlobs.js  Guarda los archivos de canción en IndexedDB
 │   ├── model/
-│   │   ├── alarma.js    Esquema, saneado y cálculo del próximo disparo
-│   │   └── alarmas.js   Repositorio: altas, bajas y consultas
+│   │   ├── alarma.js    Esquema, saneado, próximo disparo y qué debe sonar
+│   │   └── alarmas.js   Repositorio: altas, bajas, consultas y marcar como sonada
+│   ├── motor/
+│   │   ├── motor.js     Comprobación periódica, cola, pospuesto y ciclo de vida del sonido
+│   │   └── vigilia.js   Wake Lock: mantiene la pantalla encendida si hay una alarma próxima
 │   └── ui/
 │       ├── vistas.js       Navegación entre pantallas
 │       ├── alarmas.js      Vista del listado de alarmas
@@ -86,7 +90,24 @@ almacenamiento— para poder probarla fuera del navegador.
 Los audios de canción no viven en `localStorage` —tiene una cuota de pocos MB, y un
 archivo de audio ya la agotaría— sino en IndexedDB, vía `store/audioBlobs.js`. Cada
 alarma guarda solo el `id` de su canción; el archivo en sí se busca en IndexedDB al
-elegirlo, al escucharlo y —en la Fase 6— al sonar.
+elegirlo, al escucharlo y al sonar.
+
+### El motor de disparo
+
+`motor/motor.js` comprueba cada segundo si alguna alarma debe sonar, con
+`model/alarma.js`'s `alarmasQueDebenSonar(alarmas, desde, hasta)`: una función pura que
+mira qué ha pasado *entre* la comprobación anterior y la actual, no solo si "ahora" coincide
+con una hora en punto. Así, si la pestaña ha estado en segundo plano o el equipo suspendido,
+la alarma se detecta en cuanto se vuelve a comprobar, en vez de perderse sin más —y si el
+retraso pasa de dos minutos, la pantalla de alarma lo señala como perdida—.
+
+El pospuesto vive en memoria, dentro de `motor.js`, no en el almacenamiento: es un
+reintento de la sesión en curso, no un dato permanente de la alarma. Si la página se
+recarga a media espera de un pospuesto, ese pospuesto en concreto se pierde.
+
+Una alarma de «una vez» se desactiva (`marcarComoSonada`, en `model/alarmas.js`) en cuanto
+empieza a sonar, no al descartarla: si nadie llega a tocar nada, no debe reaparecer sola al
+día siguiente.
 
 ---
 
@@ -98,14 +119,16 @@ npm test
 
 Node puro, sin dependencias ni framework. Cubren el saneado del dato (incluida la canción,
 que necesita un `id` válido de IndexedDB o se descarta), el cálculo del próximo disparo
-(incluidos el cambio de horario y el caso «solo hoy y la hora ya pasada»), el repositorio
-con un `localStorage` de mentira y la correspondencia entre el catálogo de tonos y los
-patrones del sintetizador —para que no se pueda añadir un tono elegible que no suene—.
+(incluidos el cambio de horario y el caso «solo hoy y la hora ya pasada»), qué alarmas
+deben sonar entre dos instantes —el corazón del motor: detecta un disparo aunque la
+comprobación llegue tarde, y nunca lo duplica—, el repositorio con un `localStorage` de
+mentira y la correspondencia entre el catálogo de tonos y los patrones del sintetizador
+—para que no se pueda añadir un tono elegible que no suene—.
 
-Lo que no cubren: todo lo que toca IndexedDB, `<input type="file">` o el elemento
-`<audio>` de la vista previa (`selectorCancion.js`, `selectorEmisora.js`,
-`reproductor.js`, `store/audioBlobs.js`). Esas piezas se han probado a mano en el
-navegador; Node no tiene ni IndexedDB ni un DOM real sin añadir dependencias.
+Lo que no cubren: todo lo que toca IndexedDB, `<input type="file">`, el elemento `<audio>`,
+Web Audio o la Wake Lock API (`selectorCancion.js`, `selectorEmisora.js`,
+`reproductor.js`, `sintetizador.js`, `store/audioBlobs.js`, `motor/`). Esas piezas se han
+probado a mano en el navegador; Node no tiene ninguna de esas APIs sin añadir dependencias.
 
 No hay `npm install`: `package.json` solo existe para declarar `"type": "module"` —que es
 lo que hace que Node lea los archivos `.js` como módulos— y el atajo de las pruebas. La
@@ -136,7 +159,7 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 3 | Pantalla principal con el listado de alarmas | ✅ Hecha |
 | 4 | Editor de alarma | ✅ Hecha |
 | 5 | Fuentes de sonido: tonos sintetizados, canción y radio | ✅ Hecha |
-| 6 | Motor de disparo y pantalla de alarma sonando | Pendiente |
+| 6 | Motor de disparo y pantalla de alarma sonando | ✅ Hecha |
 | 7 | Cronómetro y temporizador de cuenta atrás | Pendiente |
 | 8 | Convertirla en PWA instalable | Pendiente |
 | 9 | Publicación en GitHub Pages y manual | Pendiente |
@@ -149,13 +172,24 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 Documentadas aquí desde el principio porque condicionan el diseño:
 
 - **Como web, la app debe permanecer abierta** para que la alarma suene. No existe una API
-  web fiable para programar un aviso futuro con todo cerrado. La Fase 8 lo mitiga
-  manteniendo audio de fondo, y la Fase 10 lo resuelve de verdad con el despertador nativo
-  de Android.
+  web fiable para programar un aviso futuro con todo cerrado. La Fase 6 lo mitiga con Wake
+  Lock —mantiene la pantalla encendida mientras haya una alarma próxima, para que la
+  pestaña siga en primer plano y no se suspenda—, y la Fase 10 lo resuelve de verdad con el
+  despertador nativo de Android.
+- **Wake Lock no está en todos los navegadores.** Safari y Firefox de escritorio no la
+  implementan; ahí no hay forma de evitar que la pantalla se apague sola. Tampoco es una
+  garantía aunque exista: el sistema operativo puede denegarla (batería baja, por ejemplo).
+  El motor no depende de que esté realmente concedida para funcionar; es una ayuda, no la
+  base.
+- **Un pospuesto se pierde si la página se recarga mientras está a la espera.** Vive en
+  memoria, no en el almacenamiento: es un reintento de la sesión en curso, no un dato
+  permanente de la alarma.
 - **En iPhone la fiabilidad es baja.** Safari suspende las apps en segundo plano de forma
   agresiva y Apple no ofrece a terceros un equivalente al despertador del sistema.
 - **El audio necesita una interacción previa** del usuario para desbloquearse (política de
-  autoplay de los navegadores).
+  autoplay de los navegadores). `audio/desbloqueo.js` lo hace en el primer gesto —cualquiera,
+  no tiene que ser sobre un botón de sonido— para que quede desbloqueado el resto de la
+  sesión, y la alarma pueda sonar sin que nadie toque nada justo antes.
 - **En GitHub Pages, las emisoras deben usar `https://`.** Los streams `http://` se bloquean
   por contenido mixto.
 - **Los tonos de fábrica del móvil no son accesibles desde el navegador.** Viven en una

@@ -10,7 +10,7 @@
  */
 
 import { leer, escribir } from "../store.js";
-import { normalizarAlarma, ordenarAlarmas, proximoDisparo } from "./alarma.js";
+import { REPETICION, normalizarAlarma, ordenarAlarmas, proximoDisparo } from "./alarma.js";
 
 const CLAVE = "alarmas";
 
@@ -148,6 +148,28 @@ export function alternarActiva(id) {
   if (!alarma) return null;
 
   return establecerActiva(id, !alarma.activa);
+}
+
+/**
+ * El motor de disparo llama a esto en cuanto una alarma empieza a sonar, antes
+ * de que nadie la posponga o la descarte.
+ *
+ * Una alarma de «una vez» ya ha cumplido su propósito con ese disparo: se
+ * desactiva para no volver a sonar sola dentro de 24 h. Una personalizada no
+ * cambia —el próximo día marcado ya sale solo de `proximoDisparo`—.
+ *
+ * Posponer no pasa por aquí: el reintento vive en memoria, en el propio motor,
+ * y no depende de este campo.
+ *
+ * @returns {object|null} La alarma resultante, o `null` si no existe.
+ */
+export function marcarComoSonada(id) {
+  const alarma = obtenerAlarma(id);
+  if (!alarma) return null;
+
+  if (alarma.repeticion !== REPETICION.UNA_VEZ) return alarma;
+
+  return establecerActiva(id, false);
 }
 
 /** Borra todas las alarmas. Pensado para el mantenimiento, no para la interfaz. */

@@ -1,11 +1,13 @@
 /**
  * RadioAlarm · Punto de entrada
  *
- * Estado del proyecto: Fase 5 de 10 — fuentes de sonido completas: tono,
- * canción propia y emisora de radio. El motor que las hace sonar llega en la
- * Fase 6.
+ * Estado del proyecto: Fase 6 de 10 — el motor de disparo ya hace sonar las
+ * alarmas de verdad, con pantalla propia, pospuesto, vibración y Wake Lock.
  */
 
+import { iniciarDesbloqueoAudio } from "./audio/desbloqueo.js";
+import { iniciarMotor } from "./motor/motor.js";
+import { iniciarVigilia } from "./motor/vigilia.js";
 import { iniciarTema } from "./theme.js";
 import { iniciarListaAlarmas } from "./ui/alarmas.js";
 import { iniciarEditor } from "./ui/editor.js";
@@ -55,6 +57,9 @@ function iniciar() {
   iniciarEditor();
   iniciarVistas();
   iniciarAccionesPendientes();
+  iniciarDesbloqueoAudio();
+  iniciarVigilia();
+  iniciarMotor();
 }
 
 iniciar();

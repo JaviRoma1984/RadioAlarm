@@ -411,6 +411,32 @@
 
     <div class="toast-zona" id="toast-zona" role="status" aria-live="polite"></div>
 
+    <!-- ================= Alarma sonando ================= -->
+    <!-- Fuera de .app a propósito: es una interrupción modal, no una vista más
+         de la navegación normal. Así no se pierde la pantalla en la que
+         estuviera el usuario —el listado, el editor…— al posponer o descartar. -->
+    <div
+      class="alarma-sonando"
+      id="alarma-sonando"
+      hidden
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="alarma-sonando-nombre"
+    >
+      <div class="alarma-sonando__contenido">
+        <span class="alarma-sonando__reloj tabular" id="alarma-sonando-reloj"></span>
+        <h2 class="alarma-sonando__nombre" id="alarma-sonando-nombre"></h2>
+        <p class="alarma-sonando__meta" id="alarma-sonando-meta" hidden></p>
+
+        <div class="alarma-sonando__acciones">
+          <button type="button" class="alarma-sonando__posponer" id="btn-posponer-alarma" hidden></button>
+          <button type="button" class="alarma-sonando__descartar" id="btn-descartar-alarma">
+            Descartar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="js/app.js"></script>
   </body>
 </html>

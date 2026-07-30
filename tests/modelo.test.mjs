@@ -66,6 +66,7 @@ const {
   FUENTE,
   POSPONER,
   REPETICION,
+  alarmasQueDebenSonar,
   crearAlarma,
   esHoraValida,
   normalizarAlarma,
@@ -84,6 +85,7 @@ const {
   contarAlarmas,
   guardarAlarma,
   listarAlarmas,
+  marcarComoSonada,
   obtenerAlarma,
   proximaAlarma,
 } = await import("../js/model/alarmas.js");
@@ -423,6 +425,92 @@ prueba("respeta la hora de pared al cruzar el cambio horario", () => {
 });
 
 /* -------------------------------------------------------------------------- */
+/*  Qué debe sonar (motor de disparo)                                         */
+/* -------------------------------------------------------------------------- */
+
+grupo("Alarmas que deben sonar");
+
+prueba("una alarma justo en el instante de la comprobación se detecta", () => {
+  const desde = new Date(2026, 2, 10, 6, 59, 0);
+  const hasta = new Date(2026, 2, 10, 7, 0, 0);
+  const alarma = normalizarAlarma({ hora: "07:00" });
+
+  const debidas = alarmasQueDebenSonar([alarma], desde, hasta);
+
+  igual(debidas.length, 1);
+  igual(debidas[0].alarma.id, alarma.id);
+  igual(debidas[0].cuando.getTime(), hasta.getTime());
+});
+
+prueba("una alarma que aún no ha llegado no se detecta", () => {
+  const desde = new Date(2026, 2, 10, 6, 0, 0);
+  const hasta = new Date(2026, 2, 10, 6, 30, 0);
+  const alarma = normalizarAlarma({ hora: "07:00" });
+
+  igual(alarmasQueDebenSonar([alarma], desde, hasta), []);
+});
+
+prueba("una alarma ya sonada en una comprobación anterior no vuelve a salir", () => {
+  const alarma = normalizarAlarma({ hora: "07:00" });
+
+  // La primera ventana la detecta.
+  const primera = alarmasQueDebenSonar(
+    [alarma],
+    new Date(2026, 2, 10, 6, 59, 0),
+    new Date(2026, 2, 10, 7, 0, 0),
+  );
+  igual(primera.length, 1);
+
+  // La siguiente comprobación arranca justo donde acabó la anterior: no debe
+  // volver a contar el mismo disparo.
+  const segunda = alarmasQueDebenSonar(
+    [alarma],
+    primera[0].cuando,
+    new Date(2026, 2, 10, 7, 0, 30),
+  );
+  igual(segunda, []);
+});
+
+prueba("una pestaña en segundo plano mucho tiempo: se detecta, no se duplica", () => {
+  // El equipo estuvo «dormido» 10 horas; la alarma de las 07:00 debió sonar.
+  const desde = new Date(2026, 2, 10, 0, 0, 0);
+  const hasta = new Date(2026, 2, 10, 10, 0, 0);
+  const alarma = normalizarAlarma({ hora: "07:00" });
+
+  const debidas = alarmasQueDebenSonar([alarma], desde, hasta);
+
+  igual(debidas.length, 1, "solo una vez, no una por cada minuto transcurrido");
+  igual(debidas[0].cuando.getHours(), 7);
+});
+
+prueba("varias alarmas debidas salen ordenadas por hora", () => {
+  const desde = new Date(2026, 2, 10, 6, 0, 0);
+  const hasta = new Date(2026, 2, 10, 9, 0, 0);
+  const tarde = normalizarAlarma({ nombre: "Tarde", hora: "08:00" });
+  const pronto = normalizarAlarma({ nombre: "Pronto", hora: "06:30" });
+
+  const debidas = alarmasQueDebenSonar([tarde, pronto], desde, hasta);
+
+  igual(debidas.map((d) => d.alarma.nombre), ["Pronto", "Tarde"]);
+});
+
+prueba("una alarma desactivada nunca se detecta", () => {
+  const desde = new Date(2026, 2, 10, 6, 0, 0);
+  const hasta = new Date(2026, 2, 10, 8, 0, 0);
+  const alarma = normalizarAlarma({ hora: "07:00", activa: false });
+
+  igual(alarmasQueDebenSonar([alarma], desde, hasta), []);
+});
+
+prueba("una personalizada sin días marcados nunca se detecta", () => {
+  const desde = new Date(2026, 2, 10, 6, 0, 0);
+  const hasta = new Date(2026, 2, 10, 8, 0, 0);
+  const alarma = normalizarAlarma({ hora: "07:00", repeticion: REPETICION.PERSONALIZADA });
+
+  igual(alarmasQueDebenSonar([alarma], desde, hasta), []);
+});
+
+/* -------------------------------------------------------------------------- */
 /*  Textos                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -534,6 +622,31 @@ prueba("activa y desactiva", () => {
   igual(alternarActiva(guardada.id).activa, false);
   igual(obtenerAlarma(guardada.id).activa, false);
   igual(alternarActiva(guardada.id).activa, true);
+});
+
+prueba("marcarComoSonada desactiva una alarma de una vez", () => {
+  localStorage.clear();
+  const guardada = guardarAlarma({ nombre: "Test", hora: "07:00" });
+
+  igual(marcarComoSonada(guardada.id).activa, false);
+  igual(obtenerAlarma(guardada.id).activa, false);
+});
+
+prueba("marcarComoSonada no toca una personalizada: seguirá sonando los días marcados", () => {
+  localStorage.clear();
+  const guardada = guardarAlarma({
+    nombre: "Diaria",
+    hora: "07:00",
+    repeticion: REPETICION.PERSONALIZADA,
+    dias: [1, 2, 3, 4, 5],
+  });
+
+  igual(marcarComoSonada(guardada.id).activa, true);
+  igual(obtenerAlarma(guardada.id).activa, true);
+});
+
+prueba("marcarComoSonada sobre una alarma que no existe no revienta", () => {
+  igual(marcarComoSonada("no-existe"), null);
 });
 
 prueba("desactivar no toca el resto de los datos", () => {
