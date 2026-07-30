@@ -5,6 +5,6 @@
   "description": "Despertador web que suena con un tono, una canción o una emisora de radio",
   "type": "module",
   "scripts": {
-    "test": "node tests/modelo.test.mjs"
+    "test": "node tests/modelo.test.mjs && node tests/motor.test.mjs"
   }
 }

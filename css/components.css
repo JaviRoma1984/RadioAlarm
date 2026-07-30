@@ -44,6 +44,164 @@
   display: none;
 }
 
+/* Variante sin relieve, para acciones discretas dentro de una tarjeta. */
+.icon-btn--sutil {
+  width: 2rem;
+  height: 2rem;
+  color: var(--text-faint);
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.icon-btn--sutil:hover {
+  color: var(--danger);
+  background-color: var(--danger-soft);
+  border-color: transparent;
+}
+
+.icon-btn--sutil svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+/* --------------------------------------------------------------------------
+   Interruptor de activación
+   El `<input type="checkbox">` real queda invisible sobre la etiqueta: se
+   mantiene el teclado, el foco y los lectores de pantalla sin código extra.
+   -------------------------------------------------------------------------- */
+
+.interruptor {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.interruptor__campo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.interruptor__pista {
+  display: flex;
+  align-items: center;
+  width: 2.75rem;
+  height: 1.5rem;
+  padding: 3px;
+  border-radius: var(--radius-full);
+  background-color: var(--border-strong);
+  transition: background-color var(--dur-base) var(--ease);
+}
+
+.interruptor__bola {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: var(--radius-full);
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgb(15 26 23 / 0.35);
+  transition: transform var(--dur-base) var(--ease);
+}
+
+.interruptor__campo:checked + .interruptor__pista {
+  background-color: var(--accent);
+}
+
+.interruptor__campo:checked + .interruptor__pista .interruptor__bola {
+  transform: translateX(1.25rem);
+}
+
+.interruptor__campo:focus-visible + .interruptor__pista {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Listado de alarmas
+   -------------------------------------------------------------------------- */
+
+.lista-alarmas {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.alarma {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+
+  transition: background-color var(--dur-base) var(--ease),
+    border-color var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
+}
+
+/* Una alarma desactivada se apaga visualmente, pero sigue legible. */
+.alarma[data-inactiva="true"] {
+  background-color: var(--surface-2);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.alarma__cuerpo {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-1) 0;
+  text-align: left;
+  border-radius: var(--radius-md);
+}
+
+.alarma__hora {
+  font-size: var(--text-clock);
+  font-weight: var(--weight-bold);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.alarma__nombre {
+  font-weight: var(--weight-semibold);
+}
+
+.alarma__meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.alarma__cuando {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--accent);
+}
+
+.alarma[data-inactiva="true"] .alarma__hora,
+.alarma[data-inactiva="true"] .alarma__nombre {
+  color: var(--text-faint);
+}
+
+.alarma[data-inactiva="true"] .alarma__cuando {
+  color: var(--text-faint);
+}
+
+.alarma__acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 /* --------------------------------------------------------------------------
    Botones de la barra inferior
    -------------------------------------------------------------------------- */
@@ -326,6 +484,20 @@
   outline-offset: 2px;
 }
 
+/* Mientras el tono se está oyendo se resalta con el amarillo corporativo. */
+.opcion[data-sonando="true"] {
+  border-color: var(--warn);
+  background-color: var(--warn-soft);
+}
+
+.opcion[data-sonando="true"] .opcion__marca {
+  border-color: var(--warn);
+}
+
+.opcion[data-sonando="true"] .opcion__marca::after {
+  background-color: var(--warn);
+}
+
 .opcion__radio {
   position: absolute;
   width: 0;
@@ -381,6 +553,7 @@
 
 .recurso {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
@@ -412,6 +585,387 @@
 .recurso__valor--vacio {
   color: var(--text-faint);
   font-style: italic;
+}
+
+/* Fila de botones a la derecha del recurso (Escuchar/Quitar/Elegir, o
+   Probar/Quitar). Cuando el recurso no cabe en una línea, se van debajo. */
+.recurso__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.btn--suave:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn--suave:disabled:hover {
+  border-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Campos de la emisora (nombre y URL)
+   -------------------------------------------------------------------------- */
+
+.campo-emisora {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.campo-emisora__input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.campo-emisora__input::placeholder {
+  color: var(--text-faint);
+}
+
+.campo-emisora__input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Alinea a la derecha el botón «Explorar emisoras» del selector de emisora,
+   debajo de la fila «Emisora elegida». */
+.selector-emisora__plegar {
+  display: flex;
+  justify-content: flex-end;
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+/* --------------------------------------------------------------------------
+   Editor de alarma · nombre y hora
+   Van sueltos, sin la caja de un `.panel`: son el encabezado de la pantalla.
+   -------------------------------------------------------------------------- */
+
+.editor__encabezado {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-1) var(--space-4);
+  text-align: center;
+}
+
+.editor__nombre {
+  width: 100%;
+  padding: var(--space-2) var(--space-1);
+  border: none;
+  border-bottom: 2px solid var(--border-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.editor__nombre::placeholder {
+  color: var(--text-faint);
+  font-weight: var(--weight-regular);
+}
+
+.editor__nombre:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.editor__hora {
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 3.25rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  text-align: center;
+  color-scheme: light dark;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.editor__hora:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  background-color: var(--accent-soft);
+}
+
+/* --------------------------------------------------------------------------
+   Panel colapsable
+   Para el panel de días de la semana, que se despliega solo al elegir
+   «Personalizar». El alto lo fija `js/ui/editor.js` en píxeles a partir de
+   `scrollHeight` —igual que la lista de tonos en `js/ui/plegable.js`—, porque
+   `height: auto` no se puede animar y el truco de CSS puro
+   `grid-template-rows: 0fr → 1fr` no calcula bien el alto real cuando el
+   contenido son a su vez otras rejillas (aquí, la de los 7 días).
+   -------------------------------------------------------------------------- */
+
+.colapsable {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height var(--dur-slow) var(--ease);
+}
+
+/* --------------------------------------------------------------------------
+   Días de la semana
+   -------------------------------------------------------------------------- */
+
+.dias-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.dia {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.dia:hover {
+  border-color: var(--accent);
+}
+
+.dia:active {
+  transform: scale(0.92);
+}
+
+.dia--activo {
+  color: var(--text-on-accent);
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Segmentado (tipo de sonido: Tono · Canción · Radio)
+   Mismo truco de ocultar el radio real que usa `.opcion__radio`: el clic en
+   la etiqueta ya lo activa, sin necesitar JavaScript para el estado visual.
+   -------------------------------------------------------------------------- */
+
+.segmentado {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.segmento {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.segmento:hover {
+  border-color: var(--accent);
+}
+
+.segmento:has(.segmento__radio:checked) {
+  color: var(--accent);
+  background-color: var(--accent-soft);
+  border-color: var(--accent);
+  font-weight: var(--weight-semibold);
+}
+
+.segmento:has(.segmento__radio:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.segmento__radio {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Fila con interruptor (vibración)
+   -------------------------------------------------------------------------- */
+
+.fila-interruptor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* --------------------------------------------------------------------------
+   Contador con botones + / − (pospuestos)
+   -------------------------------------------------------------------------- */
+
+.contador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.contador + .contador {
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.contador__etiqueta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.contador__control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.contador__boton {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.contador__boton:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.contador__boton:active {
+  transform: scale(0.92);
+}
+
+.contador__boton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.contador__boton:disabled:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.contador__valor {
+  min-width: 2.25rem;
+  text-align: center;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+/* --------------------------------------------------------------------------
+   Cronómetro y cuenta atrás
+   -------------------------------------------------------------------------- */
+
+/* Centra todo el contenido de estas dos vistas, en vez de apilarlo arriba
+   como el resto de pantallas. */
+.vista--reloj {
+  justify-content: center;
+  align-content: center;
+  min-height: calc(100dvh - var(--header-height) - var(--bar-espacio) - var(--fab-size));
+  text-align: center;
+}
+
+.reloj-grande {
+  padding-block: var(--space-5);
+}
+
+.reloj-grande__valor {
+  font-size: 3.75rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.reloj-grande__acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+/* Fila de los tres `.contador` para fijar horas, minutos y segundos antes de
+   arrancar la cuenta atrás; se oculta en cuanto arranca. */
+.contador-triple {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+
+.contador-triple .contador:first-child {
+  padding-top: 0;
+}
+
+.contador-triple .contador:last-child {
+  padding-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Borrar alarma desde el editor
+   -------------------------------------------------------------------------- */
+
+.btn-borrar-alarma {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-4);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--danger);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-align: center;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.btn-borrar-alarma:hover {
+  background-color: var(--danger-soft);
 }
 
 /* --------------------------------------------------------------------------
@@ -547,5 +1101,110 @@
   to {
     opacity: 0;
     transform: translateY(0.5rem) scale(0.97);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Alarma sonando
+   El amarillo corporativo es el color de "alarma sonando" en todo el sistema
+   de diseño; aquí se usa a pantalla completa, no como acento puntual.
+   -------------------------------------------------------------------------- */
+
+.alarma-sonando {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  text-align: center;
+
+  background: linear-gradient(
+    180deg,
+    var(--warn) 0%,
+    color-mix(in srgb, var(--warn) 78%, var(--bg)) 100%
+  );
+  color: var(--text-on-accent);
+
+  animation: alarma-sonando-entra var(--dur-slow) var(--ease);
+}
+
+.alarma-sonando__contenido {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 24rem;
+}
+
+.alarma-sonando__reloj {
+  font-size: 1.25rem;
+  font-weight: var(--weight-semibold);
+  opacity: 0.8;
+}
+
+.alarma-sonando__nombre {
+  font-size: 2.25rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.alarma-sonando__meta {
+  font-size: var(--text-md);
+  opacity: 0.85;
+}
+
+.alarma-sonando__acciones {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.alarma-sonando__descartar {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--text-on-accent);
+  color: var(--warn);
+  font-size: 1.15rem;
+  font-weight: var(--weight-bold);
+  box-shadow: var(--shadow-md);
+  animation: alarma-sonando-pulso 1.6s ease-in-out infinite;
+}
+
+.alarma-sonando__descartar:hover {
+  animation-play-state: paused;
+}
+
+.alarma-sonando__descartar:active {
+  transform: scale(0.96);
+}
+
+.alarma-sonando__posponer {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  border: 2px solid var(--text-on-accent);
+  color: var(--text-on-accent);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.alarma-sonando__posponer:active {
+  transform: scale(0.96);
+}
+
+@keyframes alarma-sonando-entra {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes alarma-sonando-pulso {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
   }
 }

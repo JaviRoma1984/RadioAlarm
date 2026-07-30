@@ -1,24 +1,22 @@
 /**
  * RadioAlarm · Punto de entrada
  *
- * Estado del proyecto: Fase 1 — esqueleto, sistema visual y navegación entre
- * vistas. El listado de alarmas llega en la Fase 3 y su editor en la Fase 4.
+ * Estado del proyecto: Fase 7 de 10 — cronómetro y cuenta atrás, además de las
+ * alarmas. Las tres fuentes de sonido: tono, canción propia y emisora de
+ * radio, y las tres pantallas de tiempo: alarmas, crono y cuenta atrás.
  */
 
+import { iniciarDesbloqueoAudio } from "./audio/desbloqueo.js";
+import { iniciarMotor } from "./motor/motor.js";
+import { iniciarVigilia } from "./motor/vigilia.js";
 import { iniciarTema } from "./theme.js";
+import { iniciarListaAlarmas } from "./ui/alarmas.js";
+import { iniciarCrono } from "./ui/crono.js";
+import { iniciarCuentaAtras } from "./ui/cuentaAtras.js";
+import { iniciarEditor } from "./ui/editor.js";
 import { iniciarMedidas } from "./ui/layout.js";
 import { iniciarSonido } from "./ui/sonido.js";
-import { toast } from "./ui/toast.js";
 import { iniciarVistas } from "./ui/vistas.js";
-
-/** Acciones aún sin implementar, con su fase prevista. */
-const PENDIENTES = {
-  "crear-alarma": "Crear alarmas llega en la Fase 4",
-  crono: "El cronómetro llega en la Fase 7",
-  "cuenta-atras": "El temporizador de cuenta atrás llega en la Fase 7",
-  "elegir-cancion": "Elegir canciones de tu carpeta llega en la Fase 5",
-  "elegir-radio": "Las emisoras de radio llegan en la Fase 5",
-};
 
 /** Marca la cabecera cuando el contenido se ha desplazado, para dibujar su borde. */
 function iniciarSombraCabecera() {
@@ -33,16 +31,6 @@ function iniciarSombraCabecera() {
   window.addEventListener("scroll", actualizar, { passive: true });
 }
 
-/** Conecta las acciones todavía no implementadas para que avisen de su fase. */
-function iniciarAccionesPendientes() {
-  document.querySelectorAll("[data-accion]").forEach((boton) => {
-    boton.addEventListener("click", () => {
-      const mensaje = PENDIENTES[boton.dataset.accion];
-      if (mensaje) toast(mensaje);
-    });
-  });
-}
-
 function iniciar() {
   iniciarTema({
     boton: document.getElementById("btn-tema"),
@@ -50,9 +38,15 @@ function iniciar() {
   });
   iniciarMedidas();
   iniciarSombraCabecera();
+  iniciarListaAlarmas();
   iniciarSonido();
+  iniciarEditor();
+  iniciarCrono();
+  iniciarCuentaAtras();
   iniciarVistas();
-  iniciarAccionesPendientes();
+  iniciarDesbloqueoAudio();
+  iniciarVigilia();
+  iniciarMotor();
 }
 
 iniciar();

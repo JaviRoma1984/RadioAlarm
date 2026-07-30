@@ -1,17 +1,26 @@
 /**
  * RadioAlarm · Vista de opciones de sonido
  *
- * Aquí se eligen las tres fuentes que podrá usar una alarma: el tono, la
- * canción y la emisora. Los cambios se llevan en un borrador y solo se
- * persisten al pulsar «Guardar cambios»; «Volver atrás» los descarta.
+ * El tono es una única configuración global: se elige aquí y ninguna alarma
+ * puede tener uno distinto (por eso su editor solo lo muestra, no lo deja
+ * cambiar). La canción y la emisora, en cambio, son solo las *favoritas*: la
+ * de partida al crear una alarma, que cada alarma puede cambiar después en su
+ * propio editor sin afectar a este favorito.
  *
- * Estado: la selección de tono ya es real y se guarda. La elección de canción y
- * de emisora necesita el selector de archivos y el reproductor de streams, que
- * llegan en la Fase 5.
+ * Los cambios se llevan en un borrador y solo se persisten al pulsar «Guardar
+ * cambios»; «Volver atrás» los descarta.
+ *
+ * Las tres fuentes son reales: el tono suena al elegirlo, la canción se
+ * guarda en el dispositivo (`js/store/audioBlobs.js`) y la emisora se puede
+ * probar antes de guardarla.
  */
 
+import { TONO_POR_DEFECTO, existeTono, nombreTono } from "../datos/tonos.js";
 import { leer, escribir } from "../store.js";
 import { crearPlegable } from "./plegable.js";
+import { crearSelectorCancion } from "./selectorCancion.js";
+import { crearSelectorEmisora } from "./selectorEmisora.js";
+import { crearSelectorTono } from "./selectorTono.js";
 import { toast } from "./toast.js";
 import { volverAlInicio } from "./vistas.js";
 
@@ -23,75 +32,10 @@ const CLAVE = "sonido";
  */
 const TONOS_VISIBLES = 0;
 
-/**
- * Catálogo de tonos incluidos.
- *
- * En la Fase 5 cada uno se generará por síntesis con Web Audio en lugar de
- * empaquetar archivos de audio: no dependemos de bancos de sonido con licencia,
- * no pesan nada, funcionan sin conexión y la subida progresiva de volumen sale
- * de serie. Los sonidos de alarma clásicos son ondas simples, así que se
- * reproducen bien sintetizados.
- *
- * Los tonos de fábrica del móvil NO se pueden leer desde la web: viven en una
- * carpeta protegida del sistema y solo `RingtoneManager` (nativo) los expone.
- * La Fase 10, con el envoltorio Android, añadirá la lista completa del sistema.
- * Mientras tanto, la Fase 5 permitirá importar tus propios archivos de audio.
- */
-export const TONOS = [
-  {
-    id: "clasico",
-    nombre: "Clásico",
-    descripcion: "Timbre de despertador de cuerda, trino de dos notas",
-  },
-  {
-    id: "amanecer",
-    nombre: "Amanecer",
-    descripcion: "Campanilleo suave que sube de volumen poco a poco",
-  },
-  {
-    id: "digital",
-    nombre: "Digital",
-    descripcion: "Pitido agudo y repetitivo, imposible de ignorar",
-  },
-  {
-    id: "campanas",
-    nombre: "Campanas",
-    descripcion: "Repique corto y cálido",
-  },
-  {
-    id: "marimba",
-    nombre: "Marimba",
-    descripcion: "Arpegio de madera, notas ascendentes",
-  },
-  {
-    id: "radar",
-    nombre: "Radar",
-    descripcion: "Pulso doble que se va acelerando",
-  },
-  {
-    id: "sonar",
-    nombre: "Sónar",
-    descripcion: "Tono profundo con eco largo",
-  },
-  {
-    id: "sirena",
-    nombre: "Sirena",
-    descripcion: "Barrido que sube y baja sin parar",
-  },
-  {
-    id: "goteo",
-    nombre: "Goteo",
-    descripcion: "Pulsos cortos y espaciados, para despertar sin sobresalto",
-  },
-];
-
-/** Tono preseleccionado mientras el usuario no elija otro. */
-export const TONO_POR_DEFECTO = "clasico";
-
 const POR_DEFECTO = {
   tono: TONO_POR_DEFECTO,
-  cancion: null, // { nombre } cuando la Fase 5 permita elegirla
-  emisora: null, // { nombre, url } cuando la Fase 5 permita elegirla
+  cancion: null, // { nombre, id }
+  emisora: null, // { nombre, url }
 };
 
 /** Configuración de sonido guardada, completada con los valores por defecto. */
@@ -101,7 +45,7 @@ export function configuracionSonido() {
   // Siempre tiene que haber un tono válido seleccionado. Si lo guardado apunta
   // a un tono que ya no existe (catálogo cambiado, dato manipulado), se vuelve
   // al de fábrica en lugar de quedarse sin ninguno marcado.
-  if (!TONOS.some((tono) => tono.id === configuracion.tono)) {
+  if (!existeTono(configuracion.tono)) {
     configuracion.tono = TONO_POR_DEFECTO;
   }
 
@@ -119,34 +63,41 @@ let hayCambios = false;
 /** Plegable de la lista de tonos; se crea la primera vez que se pinta. */
 let plegableTonos = null;
 
+/** El propio grupo de radios necesita un `name` que no choque con el del editor. */
+const selectorTono = crearSelectorTono({
+  contenedor: document.getElementById("lista-tonos"),
+  name: "sonido-tono",
+  onCambiar(id) {
+    borrador.tono = id;
+    pintarRecursos(); // refleja el cambio en la línea del tono elegido
+    marcarCambios();
+  },
+});
+
+const selectorCancion = crearSelectorCancion({
+  contenedor: document.getElementById("sonido-cancion"),
+  obtener: () => borrador.cancion,
+  establecer(recurso) {
+    borrador.cancion = recurso;
+    marcarCambios();
+  },
+});
+
+const selectorEmisora = crearSelectorEmisora({
+  contenedor: document.getElementById("sonido-emisora"),
+  name: "sonido-emisora",
+  obtener: () => borrador.emisora,
+  establecer(recurso) {
+    borrador.emisora = recurso;
+    marcarCambios();
+  },
+});
+
 function pintarTonos() {
   const lista = document.getElementById("lista-tonos");
   if (!lista) return;
 
-  lista.replaceChildren(
-    ...TONOS.map((tono) => {
-      const etiqueta = document.createElement("label");
-      etiqueta.className = "opcion";
-      etiqueta.innerHTML = `
-        <input type="radio" name="tono" value="${tono.id}" class="opcion__radio" />
-        <span class="opcion__marca" aria-hidden="true"></span>
-        <span class="opcion__texto">
-          <span class="opcion__nombre">${tono.nombre}</span>
-          <span class="opcion__desc">${tono.descripcion}</span>
-        </span>
-      `;
-
-      const radio = etiqueta.querySelector("input");
-      radio.checked = tono.id === borrador.tono;
-      radio.addEventListener("change", () => {
-        borrador.tono = tono.id;
-        pintarRecursos(); // refleja el cambio en la línea del tono elegido
-        marcarCambios();
-      });
-
-      return etiqueta;
-    }),
-  );
+  selectorTono.pintar(borrador.tono);
 
   plegableTonos ??= crearPlegable({
     contenedor: lista,
@@ -161,27 +112,10 @@ function pintarTonos() {
   plegableTonos.refrescar({ desplegado: false });
 }
 
-/** Nombre del tono elegido, para verlo con la lista cerrada. */
-function nombreTono(id) {
-  return TONOS.find((tono) => tono.id === id)?.nombre ?? id;
-}
-
-/** Refresca los rótulos de tono, canción y emisora con lo que haya en el borrador. */
+/** Refresca la línea del tono elegido (canción y emisora se pintan solas). */
 function pintarRecursos() {
   const tono = document.getElementById("valor-tono");
   if (tono) tono.textContent = nombreTono(borrador.tono);
-
-  const cancion = document.getElementById("valor-cancion");
-  if (cancion) {
-    cancion.textContent = borrador.cancion?.nombre ?? "Ninguna seleccionada";
-    cancion.classList.toggle("recurso__valor--vacio", !borrador.cancion);
-  }
-
-  const emisora = document.getElementById("valor-emisora");
-  if (emisora) {
-    emisora.textContent = borrador.emisora?.nombre ?? "Ninguna seleccionada";
-    emisora.classList.toggle("recurso__valor--vacio", !borrador.emisora);
-  }
 }
 
 /** Activa el botón de guardar en cuanto hay algo que guardar. */
@@ -196,13 +130,24 @@ export function refrescarSonido() {
   marcarCambios(false);
   pintarTonos();
   pintarRecursos();
+  selectorCancion.pintar();
+  selectorEmisora.pintar();
 }
 
 /* -------------------------------------------------------------------------- */
 /*  Acciones                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/** Detiene cualquier vista previa —tono, canción o emisora— que siguiera sonando. */
+function silenciarTodo() {
+  selectorTono.silenciar();
+  selectorCancion.detener();
+  selectorEmisora.detener();
+}
+
 function guardar() {
+  silenciarTodo();
+
   if (!hayCambios) {
     toast("No había cambios que guardar");
     volverAlInicio();
@@ -224,6 +169,7 @@ function guardar() {
 }
 
 function volver() {
+  silenciarTodo();
   if (hayCambios) toast("Cambios sin guardar descartados", { tipo: "aviso" });
   refrescarSonido();
   volverAlInicio();
@@ -235,8 +181,10 @@ export function iniciarSonido() {
   document.getElementById("btn-guardar-sonido")?.addEventListener("click", guardar);
   document.getElementById("btn-volver-sonido")?.addEventListener("click", volver);
 
-  // Al abrir la vista se descarta cualquier borrador anterior.
+  // Al abrir la vista se descarta cualquier borrador anterior; al salir de ella
+  // se corta cualquier tono de muestra que siguiera sonando.
   document.addEventListener("vista:cambiada", (evento) => {
     if (evento.detail.vista === "sonido") refrescarSonido();
+    else silenciarTodo();
   });
 }

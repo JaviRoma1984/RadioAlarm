@@ -96,7 +96,9 @@
         <!-- ---------- Vista: listado de alarmas ---------- -->
         <!-- Fase 3 sustituirá este estado vacío por el listado real. -->
         <section class="vista" data-vista="alarmas" aria-label="Mis alarmas">
-          <div class="empty">
+          <ul class="lista-alarmas" id="lista-alarmas" hidden></ul>
+
+          <div class="empty" id="alarmas-vacio">
             <div class="empty__icon">
               <svg
                 viewBox="0 0 24 24"
@@ -168,24 +170,14 @@
 
           <section class="panel">
             <h3 class="panel__titulo">Canción</h3>
-            <p class="panel__ayuda">Un archivo de audio de una carpeta tuya.</p>
-            <div class="recurso">
-              <span class="recurso__valor" id="valor-cancion">Ninguna seleccionada</span>
-              <button class="btn btn--suave" type="button" data-accion="elegir-cancion">
-                Elegir
-              </button>
-            </div>
+            <p class="panel__ayuda">Un archivo de audio de tu dispositivo.</p>
+            <div id="sonido-cancion"></div>
           </section>
 
           <section class="panel">
             <h3 class="panel__titulo">Emisora de radio</h3>
             <p class="panel__ayuda">Sonará en directo en cuanto salte la alarma.</p>
-            <div class="recurso">
-              <span class="recurso__valor" id="valor-emisora">Ninguna seleccionada</span>
-              <button class="btn btn--suave" type="button" data-accion="elegir-radio">
-                Elegir
-              </button>
-            </div>
+            <div id="sonido-emisora"></div>
           </section>
 
           <div class="acciones">
@@ -197,6 +189,243 @@
             </button>
           </div>
         </section>
+
+        <!-- ---------- Vista: editor de alarma ---------- -->
+        <section class="vista" data-vista="editor" aria-label="Editar alarma" hidden>
+          <div class="editor__encabezado">
+            <input
+              type="text"
+              class="editor__nombre"
+              id="editor-nombre"
+              maxlength="60"
+              placeholder="Nombre de la alarma"
+              aria-label="Nombre de la alarma"
+            />
+            <input type="time" class="editor__hora tabular" id="editor-hora" aria-label="Hora de la alarma" />
+          </div>
+
+          <section class="panel">
+            <h3 class="panel__titulo">Repetición</h3>
+            <div class="opciones" id="editor-repeticion" role="radiogroup" aria-label="Repetición">
+              <label class="opcion">
+                <input type="radio" name="editor-repeticion" value="una-vez" class="opcion__radio" />
+                <span class="opcion__marca" aria-hidden="true"></span>
+                <span class="opcion__texto">
+                  <span class="opcion__nombre">Sonar una vez</span>
+                  <span class="opcion__desc">Suena la próxima vez que llegue esa hora y se desactiva</span>
+                </span>
+              </label>
+              <label class="opcion">
+                <input type="radio" name="editor-repeticion" value="personalizada" class="opcion__radio" />
+                <span class="opcion__marca" aria-hidden="true"></span>
+                <span class="opcion__texto">
+                  <span class="opcion__nombre">Personalizar</span>
+                  <span class="opcion__desc">Elige los días de la semana en que suena</span>
+                </span>
+              </label>
+            </div>
+
+            <div class="colapsable" id="editor-dias-envoltura">
+              <div class="dias-semana" id="editor-dias" role="group" aria-label="Días de la semana"></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3 class="panel__titulo">Sonido</h3>
+            <div class="segmentado" id="editor-fuente" role="radiogroup" aria-label="Tipo de sonido">
+              <label class="segmento">
+                <input type="radio" name="editor-fuente" value="tono" class="segmento__radio" />
+                <span>Tono</span>
+              </label>
+              <label class="segmento">
+                <input type="radio" name="editor-fuente" value="cancion" class="segmento__radio" />
+                <span>Canción</span>
+              </label>
+              <label class="segmento">
+                <input type="radio" name="editor-fuente" value="radio" class="segmento__radio" />
+                <span>Radio</span>
+              </label>
+            </div>
+
+            <div id="editor-tono">
+              <div class="recurso">
+                <span class="recurso__etiqueta">Tono</span>
+                <span class="recurso__valor" id="editor-valor-tono">Clásico</span>
+              </div>
+              <p class="panel__ayuda">Se cambia desde Sonido, en la barra inferior.</p>
+            </div>
+
+            <div id="editor-cancion" hidden></div>
+
+            <div id="editor-radio" hidden>
+              <div class="recurso">
+                <span class="recurso__etiqueta">Emisora</span>
+                <span class="recurso__valor" id="editor-valor-radio">Ninguna seleccionada</span>
+              </div>
+              <p class="panel__ayuda">Se cambia desde Sonido, en la barra inferior.</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="fila-interruptor">
+              <div>
+                <h3 class="panel__titulo">Vibración</h3>
+                <p class="panel__ayuda">Vibra el dispositivo mientras suena, si lo permite.</p>
+              </div>
+              <label class="interruptor">
+                <input type="checkbox" class="interruptor__campo" id="editor-vibracion" />
+                <span class="interruptor__pista"><span class="interruptor__bola"></span></span>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3 class="panel__titulo">Posponer</h3>
+            <p class="panel__ayuda">
+              Cuántas veces se puede posponer y cuánto tarda en volver a sonar.
+            </p>
+
+            <div class="contador">
+              <span class="contador__etiqueta">Veces</span>
+              <div class="contador__control">
+                <button type="button" class="contador__boton" id="editor-veces-menos" aria-label="Menos veces">−</button>
+                <span class="contador__valor tabular" id="editor-veces-valor">3</span>
+                <button type="button" class="contador__boton" id="editor-veces-mas" aria-label="Más veces">+</button>
+              </div>
+            </div>
+
+            <div class="contador" id="editor-minutos-fila">
+              <span class="contador__etiqueta">Minutos entre pospuestos</span>
+              <div class="contador__control">
+                <button type="button" class="contador__boton" id="editor-minutos-menos" aria-label="Menos minutos">−</button>
+                <span class="contador__valor tabular" id="editor-minutos-valor">5</span>
+                <button type="button" class="contador__boton" id="editor-minutos-mas" aria-label="Más minutos">+</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="acciones">
+            <button class="btn btn--secundario" type="button" id="btn-volver-editor">
+              Volver atrás
+            </button>
+            <button class="btn btn--primario" type="button" id="btn-guardar-editor">
+              Guardar cambios
+            </button>
+          </div>
+
+          <button class="btn-borrar-alarma" type="button" id="btn-borrar-editor" hidden>
+            Borrar esta alarma
+          </button>
+        </section>
+
+        <!-- ---------- Vista: cronómetro ---------- -->
+        <section class="vista vista--reloj" data-vista="crono" aria-label="Cronómetro" hidden>
+          <div class="reloj-grande">
+            <span class="reloj-grande__valor tabular" id="crono-valor">00:00.00</span>
+          </div>
+
+          <div class="reloj-grande__acciones">
+            <button class="btn btn--secundario" type="button" id="btn-crono-reiniciar">
+              Reiniciar
+            </button>
+            <button class="btn btn--primario" type="button" id="btn-crono-iniciar">
+              Iniciar
+            </button>
+          </div>
+        </section>
+
+        <!-- ---------- Vista: cuenta atrás ---------- -->
+        <section
+          class="vista vista--reloj"
+          data-vista="cuenta-atras"
+          aria-label="Cuenta atrás"
+          hidden
+        >
+          <div class="reloj-grande">
+            <span class="reloj-grande__valor tabular" id="cuenta-atras-valor">00:00</span>
+          </div>
+
+          <!-- Fija la duración de partida; se oculta en cuanto arranca. -->
+          <div class="contador-triple" id="cuenta-atras-ajuste">
+            <div class="contador">
+              <span class="contador__etiqueta">Horas</span>
+              <div class="contador__control">
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-horas-menos"
+                  aria-label="Menos horas"
+                >
+                  −
+                </button>
+                <span class="contador__valor tabular" id="cuenta-atras-horas-valor">0</span>
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-horas-mas"
+                  aria-label="Más horas"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="contador">
+              <span class="contador__etiqueta">Minutos</span>
+              <div class="contador__control">
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-minutos-menos"
+                  aria-label="Menos minutos"
+                >
+                  −
+                </button>
+                <span class="contador__valor tabular" id="cuenta-atras-minutos-valor">5</span>
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-minutos-mas"
+                  aria-label="Más minutos"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="contador">
+              <span class="contador__etiqueta">Segundos</span>
+              <div class="contador__control">
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-segundos-menos"
+                  aria-label="Menos segundos"
+                >
+                  −
+                </button>
+                <span class="contador__valor tabular" id="cuenta-atras-segundos-valor">0</span>
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-segundos-mas"
+                  aria-label="Más segundos"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="reloj-grande__acciones">
+            <button class="btn btn--secundario" type="button" id="btn-cuenta-atras-reiniciar">
+              Reiniciar
+            </button>
+            <button class="btn btn--primario" type="button" id="btn-cuenta-atras-iniciar">
+              Iniciar
+            </button>
+          </div>
+        </section>
       </main>
 
       <!-- ================= Barra de acciones ================= -->
@@ -204,7 +433,7 @@
         <button
           class="bar-btn"
           type="button"
-          data-accion="crono"
+          data-vista-destino="crono"
           aria-label="Cronómetro"
           title="Cronómetro"
         >
@@ -228,7 +457,7 @@
         <button
           class="bar-btn"
           type="button"
-          data-accion="cuenta-atras"
+          data-vista-destino="cuenta-atras"
           aria-label="Temporizador de cuenta atrás"
           title="Temporizador de cuenta atrás"
         >
@@ -279,7 +508,6 @@
         class="fab"
         id="fab-crear"
         type="button"
-        data-accion="crear-alarma"
         aria-label="Crear alarma"
         title="Crear"
       >
@@ -297,6 +525,55 @@
     </div>
 
     <div class="toast-zona" id="toast-zona" role="status" aria-live="polite"></div>
+
+    <!-- ================= Alarma sonando ================= -->
+    <!-- Fuera de .app a propósito: es una interrupción modal, no una vista más
+         de la navegación normal. Así no se pierde la pantalla en la que
+         estuviera el usuario —el listado, el editor…— al posponer o descartar. -->
+    <div
+      class="alarma-sonando"
+      id="alarma-sonando"
+      hidden
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="alarma-sonando-nombre"
+    >
+      <div class="alarma-sonando__contenido">
+        <span class="alarma-sonando__reloj tabular" id="alarma-sonando-reloj"></span>
+        <h2 class="alarma-sonando__nombre" id="alarma-sonando-nombre"></h2>
+        <p class="alarma-sonando__meta" id="alarma-sonando-meta" hidden></p>
+
+        <div class="alarma-sonando__acciones">
+          <button type="button" class="alarma-sonando__posponer" id="btn-posponer-alarma" hidden></button>
+          <button type="button" class="alarma-sonando__descartar" id="btn-descartar-alarma">
+            Descartar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= Cuenta atrás terminada ================= -->
+    <!-- Mismo lenguaje visual que la alarma sonando (misma clase), pero sin
+         posponer ni aviso de "perdida": un temporizador no tiene esos conceptos. -->
+    <div
+      class="alarma-sonando"
+      id="temporizador-terminado"
+      hidden
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="temporizador-terminado-titulo"
+    >
+      <div class="alarma-sonando__contenido">
+        <h2 class="alarma-sonando__nombre" id="temporizador-terminado-titulo">¡Tiempo!</h2>
+        <p class="alarma-sonando__meta">El temporizador ha terminado.</p>
+
+        <div class="alarma-sonando__acciones">
+          <button type="button" class="alarma-sonando__descartar" id="btn-detener-temporizador">
+            Detener
+          </button>
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="js/app.js"></script>
   </body>

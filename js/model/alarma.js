@@ -114,11 +114,21 @@ function sanearNombre(valor) {
   return limpio || NOMBRE_POR_DEFECTO;
 }
 
-/** Días válidos, sin repetidos y ordenados. */
+/**
+ * Días válidos, sin repetidos y ordenados.
+ *
+ * Se filtra por tipo ANTES de convertir a número: `Number(null)`, `Number("")`
+ * y `Number(false)` valen 0, que es un día válido (domingo). Sin este filtro,
+ * un dato corrupto activaría el domingo por su cuenta.
+ */
 function sanearDias(valor) {
   if (!Array.isArray(valor)) return [];
 
   const validos = valor
+    .filter(
+      (dia) =>
+        typeof dia === "number" || (typeof dia === "string" && dia.trim() !== ""),
+    )
     .map(Number)
     .filter((dia) => Number.isInteger(dia) && dia >= 0 && dia <= 6);
 
@@ -132,7 +142,12 @@ function sanearRecurso(valor, conUrl = false) {
   const nombre = typeof valor.nombre === "string" ? valor.nombre.trim() : "";
   if (!nombre) return null;
 
-  if (!conUrl) return { nombre };
+  if (!conUrl) {
+    // Una canción necesita el id con el que se guardó su audio en IndexedDB
+    // (js/store/audioBlobs.js); sin él no hay forma de recuperar el archivo.
+    const id = typeof valor.id === "string" ? valor.id.trim() : "";
+    return id ? { nombre, id } : null;
+  }
 
   const url = typeof valor.url === "string" ? valor.url.trim() : "";
   return url ? { nombre, url } : null;
@@ -285,6 +300,39 @@ export function proximoDisparo(alarma, desde = new Date()) {
   }
 
   return null;
+}
+
+/**
+ * Qué alarmas deben sonar entre dos instantes: `(desde, hasta]`, ambos
+ * incluidos salvo `desde`.
+ *
+ * Es el corazón del motor de disparo (Fase 6). Se usa `(desde, hasta]` en vez
+ * de comprobar solo «ahora» para no perder una alarma si el temporizador se
+ * retrasa —pestaña en segundo plano, equipo suspendido—: `desde` es la última
+ * vez que se comprobó, así que cualquier disparo ocurrido mientras tanto se
+ * detecta igual, aunque haya pasado ya el momento exacto.
+ *
+ * Solo puede devolver **una** alarma por cada elemento de `alarmas`, nunca dos
+ * ocurrencias de la misma: `proximoDisparo` solo calcula la siguiente, así que
+ * un hueco larguísimo (equipo suspendido varios días) no hace sonar de golpe
+ * todos los disparos que hubo mientras tanto, solo el más próximo a `desde`.
+ *
+ * @param {object[]} alarmas
+ * @param {Date} desde Última comprobación.
+ * @param {Date} hasta Comprobación actual; normalmente `new Date()`.
+ * @returns {{alarma: object, cuando: Date}[]} Ordenado por `cuando`.
+ */
+export function alarmasQueDebenSonar(alarmas, desde, hasta) {
+  const debidas = [];
+
+  for (const alarma of alarmas) {
+    const cuando = proximoDisparo(alarma, desde);
+    if (cuando && cuando.getTime() <= hasta.getTime()) {
+      debidas.push({ alarma, cuando });
+    }
+  }
+
+  return debidas.sort((a, b) => a.cuando.getTime() - b.cuando.getTime());
 }
 
 /* -------------------------------------------------------------------------- */

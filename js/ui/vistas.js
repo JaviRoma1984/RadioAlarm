@@ -23,8 +23,10 @@ export function vistaActual() {
 /**
  * Muestra una vista y oculta el resto.
  * @param {string} nombre Valor del atributo `data-vista` de la sección.
+ * @param {object} [detalle] Datos extra para quien escuche `vista:cambiada`;
+ *   por ejemplo `{ id }` para abrir el editor sobre una alarma concreta.
  */
-export function mostrarVista(nombre) {
+export function mostrarVista(nombre, detalle = {}) {
   document.querySelectorAll("[data-vista]").forEach((seccion) => {
     seccion.hidden = seccion.dataset.vista !== nombre;
   });
@@ -46,7 +48,9 @@ export function mostrarVista(nombre) {
 
   // Cada vista se refresca al abrirse escuchando este evento, sin que este
   // módulo tenga que conocerlas.
-  document.dispatchEvent(new CustomEvent("vista:cambiada", { detail: { vista: nombre } }));
+  document.dispatchEvent(
+    new CustomEvent("vista:cambiada", { detail: { ...detalle, vista: nombre } }),
+  );
 }
 
 /** Vuelve al listado de alarmas. */
