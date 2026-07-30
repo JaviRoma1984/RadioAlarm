@@ -311,6 +311,115 @@
             Borrar esta alarma
           </button>
         </section>
+
+        <!-- ---------- Vista: cronómetro ---------- -->
+        <section class="vista vista--reloj" data-vista="crono" aria-label="Cronómetro" hidden>
+          <div class="reloj-grande">
+            <span class="reloj-grande__valor tabular" id="crono-valor">00:00.00</span>
+          </div>
+
+          <div class="reloj-grande__acciones">
+            <button class="btn btn--secundario" type="button" id="btn-crono-reiniciar">
+              Reiniciar
+            </button>
+            <button class="btn btn--primario" type="button" id="btn-crono-iniciar">
+              Iniciar
+            </button>
+          </div>
+        </section>
+
+        <!-- ---------- Vista: cuenta atrás ---------- -->
+        <section
+          class="vista vista--reloj"
+          data-vista="cuenta-atras"
+          aria-label="Cuenta atrás"
+          hidden
+        >
+          <div class="reloj-grande">
+            <span class="reloj-grande__valor tabular" id="cuenta-atras-valor">00:00</span>
+          </div>
+
+          <!-- Fija la duración de partida; se oculta en cuanto arranca. -->
+          <div class="contador-triple" id="cuenta-atras-ajuste">
+            <div class="contador">
+              <span class="contador__etiqueta">Horas</span>
+              <div class="contador__control">
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-horas-menos"
+                  aria-label="Menos horas"
+                >
+                  −
+                </button>
+                <span class="contador__valor tabular" id="cuenta-atras-horas-valor">0</span>
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-horas-mas"
+                  aria-label="Más horas"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="contador">
+              <span class="contador__etiqueta">Minutos</span>
+              <div class="contador__control">
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-minutos-menos"
+                  aria-label="Menos minutos"
+                >
+                  −
+                </button>
+                <span class="contador__valor tabular" id="cuenta-atras-minutos-valor">5</span>
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-minutos-mas"
+                  aria-label="Más minutos"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="contador">
+              <span class="contador__etiqueta">Segundos</span>
+              <div class="contador__control">
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-segundos-menos"
+                  aria-label="Menos segundos"
+                >
+                  −
+                </button>
+                <span class="contador__valor tabular" id="cuenta-atras-segundos-valor">0</span>
+                <button
+                  type="button"
+                  class="contador__boton"
+                  id="cuenta-atras-segundos-mas"
+                  aria-label="Más segundos"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="reloj-grande__acciones">
+            <button class="btn btn--secundario" type="button" id="btn-cuenta-atras-reiniciar">
+              Reiniciar
+            </button>
+            <button class="btn btn--primario" type="button" id="btn-cuenta-atras-iniciar">
+              Iniciar
+            </button>
+          </div>
+        </section>
       </main>
 
       <!-- ================= Barra de acciones ================= -->
@@ -318,7 +427,7 @@
         <button
           class="bar-btn"
           type="button"
-          data-accion="crono"
+          data-vista-destino="crono"
           aria-label="Cronómetro"
           title="Cronómetro"
         >
@@ -342,7 +451,7 @@
         <button
           class="bar-btn"
           type="button"
-          data-accion="cuenta-atras"
+          data-vista-destino="cuenta-atras"
           aria-label="Temporizador de cuenta atrás"
           title="Temporizador de cuenta atrás"
         >
@@ -432,6 +541,29 @@
           <button type="button" class="alarma-sonando__posponer" id="btn-posponer-alarma" hidden></button>
           <button type="button" class="alarma-sonando__descartar" id="btn-descartar-alarma">
             Descartar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= Cuenta atrás terminada ================= -->
+    <!-- Mismo lenguaje visual que la alarma sonando (misma clase), pero sin
+         posponer ni aviso de "perdida": un temporizador no tiene esos conceptos. -->
+    <div
+      class="alarma-sonando"
+      id="temporizador-terminado"
+      hidden
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="temporizador-terminado-titulo"
+    >
+      <div class="alarma-sonando__contenido">
+        <h2 class="alarma-sonando__nombre" id="temporizador-terminado-titulo">¡Tiempo!</h2>
+        <p class="alarma-sonando__meta">El temporizador ha terminado.</p>
+
+        <div class="alarma-sonando__acciones">
+          <button type="button" class="alarma-sonando__descartar" id="btn-detener-temporizador">
+            Detener
           </button>
         </div>
       </div>

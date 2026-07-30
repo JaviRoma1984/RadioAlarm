@@ -2,14 +2,20 @@
  * RadioAlarm · Vigilia (Wake Lock)
  *
  * Envuelve la Wake Lock API para mantener la pantalla encendida mientras haya
- * una alarma por sonar. Sin esto, el móvil apaga la pantalla y el navegador
- * puede llegar a suspender la pestaña, con lo que la alarma no sonaría a su
- * hora —o no sonaría en absoluto—.
+ * algo que lo necesite: una alarma por sonar, un cronómetro corriendo, una
+ * cuenta atrás en marcha… Sin esto, el móvil apaga la pantalla y el navegador
+ * puede llegar a suspender la pestaña, con lo que ese algo no llegaría a su
+ * hora —o no llegaría en absoluto—.
+ *
+ * Puede haber varias razones a la vez para necesitarla —una alarma próxima Y
+ * una cuenta atrás en marcha, por ejemplo—, así que se lleva un conjunto de
+ * razones en vez de un único booleano: la vigilia solo se libera cuando ya no
+ * queda ninguna, no en cuanto una de ellas deja de necesitarla.
  *
  * No es una garantía: no todos los navegadores la implementan (Safari de
  * escritorio y Firefox, entre los que nos importan, no la tienen), y el
  * propio sistema operativo puede denegarla en algunas circunstancias (batería
- * muy baja, por ejemplo). Por eso el resto del motor no depende de que esta
+ * muy baja, por ejemplo). Por eso nada de lo que la pide depende de que esta
  * vigilia esté realmente activa para funcionar: es una ayuda, no la base.
  *
  * El bloqueo se libera solo en cuanto la pestaña deja de estar visible —lo
@@ -18,7 +24,9 @@
  */
 
 let bloqueo = null;
-let haceFalta = false;
+
+/** Claves de quien la necesita ahora mismo: `"alarmas"`, `"crono"`, `"cuenta-atras"`… */
+const razones = new Set();
 
 function disponible() {
   return "wakeLock" in navigator;
@@ -45,20 +53,22 @@ function liberar() {
 }
 
 /**
- * Indica si hace falta mantener la pantalla encendida. La llama el motor cada
- * vez que cambia si hay o no una próxima alarma activa.
+ * Añade o quita una razón para mantener la pantalla encendida. Solo se libera
+ * la vigilia cuando no queda ninguna razón activa.
+ * @param {string} clave Identifica a quien la pide, para no pisar a otro.
  * @param {boolean} valor
  */
-export function establecerNecesidad(valor) {
-  haceFalta = valor;
+export function establecerNecesidad(clave, valor) {
+  if (valor) razones.add(clave);
+  else razones.delete(clave);
 
-  if (haceFalta) solicitar();
+  if (razones.size > 0) solicitar();
   else liberar();
 }
 
 /** Se llama una vez al arrancar, para recuperar la vigilia tras cada cambio de pestaña. */
 export function iniciarVigilia() {
   document.addEventListener("visibilitychange", () => {
-    if (haceFalta && document.visibilityState === "visible") solicitar();
+    if (razones.size > 0 && document.visibilityState === "visible") solicitar();
   });
 }

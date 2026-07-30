@@ -10,42 +10,9 @@
  * `localStorage` de mentira antes de importarlo.
  */
 
-/* -------------------------------------------------------------------------- */
-/*  Arnés mínimo                                                              */
-/* -------------------------------------------------------------------------- */
+import { crearArnes } from "./arnes.mjs";
 
-let pasadas = 0;
-let fallidas = 0;
-let grupoActual = "";
-
-function grupo(nombre) {
-  grupoActual = nombre;
-  console.log(`\n${nombre}`);
-}
-
-function prueba(nombre, fn) {
-  try {
-    fn();
-    pasadas += 1;
-    console.log(`  ✓ ${nombre}`);
-  } catch (error) {
-    fallidas += 1;
-    console.log(`  ✗ ${nombre}`);
-    console.log(`      ${error.message}`);
-  }
-}
-
-function igual(real, esperado, contexto = "") {
-  const a = JSON.stringify(real);
-  const b = JSON.stringify(esperado);
-  if (a !== b) {
-    throw new Error(`${contexto ? contexto + ": " : ""}esperaba ${b}, obtuvo ${a}`);
-  }
-}
-
-function cierto(valor, contexto = "esperaba un valor verdadero") {
-  if (!valor) throw new Error(contexto);
-}
+const { grupo, prueba, igual, cierto, resumen } = crearArnes();
 
 /* -------------------------------------------------------------------------- */
 /*  localStorage de mentira, antes de importar nada que lo use                */
@@ -732,8 +699,4 @@ prueba("avisa a quien esté escuchando los cambios", () => {
 
 /* -------------------------------------------------------------------------- */
 
-console.log(`\n${"─".repeat(46)}`);
-console.log(`  ${pasadas} pasadas · ${fallidas} fallidas`);
-console.log("─".repeat(46));
-
-process.exit(fallidas > 0 ? 1 : 0);
+resumen();

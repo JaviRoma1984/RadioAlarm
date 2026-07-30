@@ -888,6 +888,58 @@
 }
 
 /* --------------------------------------------------------------------------
+   Cronómetro y cuenta atrás
+   -------------------------------------------------------------------------- */
+
+/* Centra todo el contenido de estas dos vistas, en vez de apilarlo arriba
+   como el resto de pantallas. */
+.vista--reloj {
+  justify-content: center;
+  align-content: center;
+  min-height: calc(100dvh - var(--header-height) - var(--bar-espacio) - var(--fab-size));
+  text-align: center;
+}
+
+.reloj-grande {
+  padding-block: var(--space-5);
+}
+
+.reloj-grande__valor {
+  font-size: 3.75rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.reloj-grande__acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+/* Fila de los tres `.contador` para fijar horas, minutos y segundos antes de
+   arrancar la cuenta atrás; se oculta en cuanto arranca. */
+.contador-triple {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+
+.contador-triple .contador:first-child {
+  padding-top: 0;
+}
+
+.contador-triple .contador:last-child {
+  padding-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
    Borrar alarma desde el editor
    -------------------------------------------------------------------------- */
 

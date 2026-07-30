@@ -27,7 +27,11 @@ import { alCambiar, listarAlarmas, marcarComoSonada, obtenerAlarma, proximaAlarm
 import { obtenerAudio } from "../store/audioBlobs.js";
 import { pararAlarmaTono, sonarAlarmaTono } from "../audio/sintetizador.js";
 import { pararVistaPrevia, sonarCancionEnBucle, sonarEmisoraEnBucle } from "../audio/reproductor.js";
+import { detenerVibracion, iniciarVibracion } from "./vibracion.js";
 import { establecerNecesidad } from "./vigilia.js";
+
+/** Clave con la que este módulo pide la vigilia; ver `vigilia.js`. */
+const RAZON_VIGILIA = "alarmas";
 
 /** Cada cuánto se comprueba si alguna alarma debe sonar. */
 const INTERVALO_TICK_MS = 1000;
@@ -35,8 +39,6 @@ const INTERVALO_TICK_MS = 1000;
 const UMBRAL_PERDIDA_MS = 2 * 60 * 1000;
 /** Cuánto tarda el sonido en llegar al volumen normal. */
 const RAMPA_MS = 20000;
-/** Patrón de vibración, repetido mientras suena. */
-const PATRON_VIBRACION = [500, 300];
 
 /** Última vez que se comprobó qué alarmas debían sonar. */
 let ultimaComprobacion = new Date();
@@ -50,7 +52,6 @@ const cola = [];
 /** La que está sonando ahora mismo, o `null`. */
 let actual = null;
 
-let temporizadorVibracion = null;
 let temporizadorReloj = null;
 let elementoConFocoPrevio = null;
 
@@ -102,23 +103,6 @@ async function iniciarSonido(alarma) {
 function detenerSonido() {
   pararAlarmaTono();
   pararVistaPrevia();
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Vibración                                                                 */
-/* -------------------------------------------------------------------------- */
-
-function iniciarVibracion() {
-  if (!("vibrate" in navigator)) return;
-
-  navigator.vibrate(PATRON_VIBRACION);
-  temporizadorVibracion = setInterval(() => navigator.vibrate(PATRON_VIBRACION), 2000);
-}
-
-function detenerVibracion() {
-  clearInterval(temporizadorVibracion);
-  temporizadorVibracion = null;
-  if ("vibrate" in navigator) navigator.vibrate(0);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -275,7 +259,7 @@ export function iniciarMotor() {
   document.getElementById("btn-posponer-alarma")?.addEventListener("click", posponer);
   document.getElementById("btn-descartar-alarma")?.addEventListener("click", descartar);
 
-  const actualizarVigilia = () => establecerNecesidad(Boolean(proximaAlarma()));
+  const actualizarVigilia = () => establecerNecesidad(RAZON_VIGILIA, Boolean(proximaAlarma()));
   actualizarVigilia();
   alCambiar(actualizarVigilia);
 

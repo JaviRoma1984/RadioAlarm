@@ -57,12 +57,16 @@ RadioAlarm/
 │   │   ├── alarma.js    Esquema, saneado, próximo disparo y qué debe sonar
 │   │   └── alarmas.js   Repositorio: altas, bajas, consultas y marcar como sonada
 │   ├── motor/
-│   │   ├── motor.js     Comprobación periódica, cola, pospuesto y ciclo de vida del sonido
-│   │   └── vigilia.js   Wake Lock: mantiene la pantalla encendida si hay una alarma próxima
+│   │   ├── motor.js      Comprobación periódica, cola, pospuesto y ciclo de vida del sonido
+│   │   ├── tiempo.js     Cronómetro y cuenta atrás: lógica pura, sin DOM ni temporizadores
+│   │   ├── vibracion.js  Repite `navigator.vibrate` mientras algo suena
+│   │   └── vigilia.js    Wake Lock: mantiene la pantalla encendida si algo lo necesita
 │   └── ui/
 │       ├── vistas.js       Navegación entre pantallas
 │       ├── alarmas.js      Vista del listado de alarmas
 │       ├── editor.js       Editor de alarma: crear y editar
+│       ├── crono.js        Vista del cronómetro
+│       ├── cuentaAtras.js  Vista de la cuenta atrás
 │       ├── sonido.js       Vista de opciones de sonido (tono, canción y emisora favoritos)
 │       ├── selectorTono.js    Widget de tono: lista, selección y reproducción
 │       ├── selectorCancion.js Widget de canción: elegir archivo, guardar, escuchar
@@ -71,9 +75,11 @@ RadioAlarm/
 │       ├── layout.js       Medidas de la barra inferior
 │       └── toast.js        Avisos flotantes
 ├── tests/
-│   └── modelo.test.mjs  Pruebas del modelo
+│   ├── arnes.mjs         Arnés mínimo de pruebas, compartido por los dos archivos siguientes
+│   ├── modelo.test.mjs   Pruebas del modelo de alarmas
+│   └── motor.test.mjs    Pruebas del cronómetro y la cuenta atrás
 └── docs/
-    └── MANUAL.md        Manual de uso
+    └── MANUAL.md         Manual de uso
 ```
 
 ### Capas
@@ -109,6 +115,23 @@ Una alarma de «una vez» se desactiva (`marcarComoSonada`, en `model/alarmas.js
 empieza a sonar, no al descartarla: si nadie llega a tocar nada, no debe reaparecer sola al
 día siguiente.
 
+### Cronómetro y cuenta atrás
+
+`motor/tiempo.js` es lógica pura, en la misma línea que `alarmasQueDebenSonar`: cada función
+recibe el instante actual como parámetro en vez de leer el reloj por su cuenta, así que se
+puede probar con marcas de tiempo fijas. `js/ui/crono.js` y `js/ui/cuentaAtras.js` son los
+que la conectan a un `setInterval` de verdad y la pintan.
+
+Los dos siguen corriendo si se navega a otra vista —el intervalo no depende de qué pantalla
+esté abierta, solo el repintado—, y los dos piden vigilia mientras están en marcha, con su
+propia clave (`"crono"`, `"cuenta-atras"`) independiente de la de las alarmas
+(`"alarmas"`): pueden necesitarla varias cosas a la vez, y la pantalla solo se libera cuando
+ya no la necesita ninguna.
+
+Al llegar a cero, la cuenta atrás suena y vibra igual que una alarma —reutiliza
+`sintetizador.js` y `vibracion.js`, con el tono favorito de Opciones de sonido—, pero con su
+propio aviso a pantalla completa: un temporizador no tiene "posponer" ni "se ha perdido".
+
 ---
 
 ## Pruebas
@@ -117,18 +140,21 @@ día siguiente.
 npm test
 ```
 
-Node puro, sin dependencias ni framework. Cubren el saneado del dato (incluida la canción,
-que necesita un `id` válido de IndexedDB o se descarta), el cálculo del próximo disparo
-(incluidos el cambio de horario y el caso «solo hoy y la hora ya pasada»), qué alarmas
-deben sonar entre dos instantes —el corazón del motor: detecta un disparo aunque la
-comprobación llegue tarde, y nunca lo duplica—, el repositorio con un `localStorage` de
-mentira y la correspondencia entre el catálogo de tonos y los patrones del sintetizador
-—para que no se pueda añadir un tono elegible que no suene—.
+Dos archivos, con el mismo arnés mínimo (`tests/arnes.mjs`) y sin dependencias ni
+framework. `modelo.test.mjs` cubre el saneado del dato (incluida la canción, que necesita
+un `id` válido de IndexedDB o se descarta), el cálculo del próximo disparo (incluidos el
+cambio de horario y el caso «solo hoy y la hora ya pasada»), qué alarmas deben sonar entre
+dos instantes —el corazón del motor: detecta un disparo aunque la comprobación llegue
+tarde, y nunca lo duplica—, el repositorio con un `localStorage` de mentira y la
+correspondencia entre el catálogo de tonos y los patrones del sintetizador. `motor.test.mjs`
+cubre el cronómetro y la cuenta atrás: pausar y reanudar, que «comprobar» solo avise una vez
+de que ha terminado, y el formato de los relojes.
 
 Lo que no cubren: todo lo que toca IndexedDB, `<input type="file">`, el elemento `<audio>`,
 Web Audio o la Wake Lock API (`selectorCancion.js`, `selectorEmisora.js`,
-`reproductor.js`, `sintetizador.js`, `store/audioBlobs.js`, `motor/`). Esas piezas se han
-probado a mano en el navegador; Node no tiene ninguna de esas APIs sin añadir dependencias.
+`reproductor.js`, `sintetizador.js`, `store/audioBlobs.js`, `motor/motor.js`,
+`motor/vigilia.js`, `motor/vibracion.js`). Esas piezas se han probado a mano en el
+navegador; Node no tiene ninguna de esas APIs sin añadir dependencias.
 
 No hay `npm install`: `package.json` solo existe para declarar `"type": "module"` —que es
 lo que hace que Node lea los archivos `.js` como módulos— y el atajo de las pruebas. La
@@ -160,7 +186,7 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 4 | Editor de alarma | ✅ Hecha |
 | 5 | Fuentes de sonido: tonos sintetizados, canción y radio | ✅ Hecha |
 | 6 | Motor de disparo y pantalla de alarma sonando | ✅ Hecha |
-| 7 | Cronómetro y temporizador de cuenta atrás | Pendiente |
+| 7 | Cronómetro y temporizador de cuenta atrás | ✅ Hecha |
 | 8 | Convertirla en PWA instalable | Pendiente |
 | 9 | Publicación en GitHub Pages y manual | Pendiente |
 | 10 | Envoltorio Android nativo: alarma con el móvil bloqueado y tonos del sistema | Pendiente |
@@ -173,17 +199,20 @@ Documentadas aquí desde el principio porque condicionan el diseño:
 
 - **Como web, la app debe permanecer abierta** para que la alarma suene. No existe una API
   web fiable para programar un aviso futuro con todo cerrado. La Fase 6 lo mitiga con Wake
-  Lock —mantiene la pantalla encendida mientras haya una alarma próxima, para que la
-  pestaña siga en primer plano y no se suspenda—, y la Fase 10 lo resuelve de verdad con el
-  despertador nativo de Android.
+  Lock —mantiene la pantalla encendida mientras haya una alarma próxima, un cronómetro
+  corriendo o una cuenta atrás en marcha, para que la pestaña siga en primer plano y no se
+  suspenda—, y la Fase 10 lo resuelve de verdad con el despertador nativo de Android.
 - **Wake Lock no está en todos los navegadores.** Safari y Firefox de escritorio no la
   implementan; ahí no hay forma de evitar que la pantalla se apague sola. Tampoco es una
   garantía aunque exista: el sistema operativo puede denegarla (batería baja, por ejemplo).
-  El motor no depende de que esté realmente concedida para funcionar; es una ayuda, no la
-  base.
+  Nada de lo que la pide depende de que esté realmente concedida para funcionar; es una
+  ayuda, no la base.
 - **Un pospuesto se pierde si la página se recarga mientras está a la espera.** Vive en
   memoria, no en el almacenamiento: es un reintento de la sesión en curso, no un dato
   permanente de la alarma.
+- **El cronómetro y la cuenta atrás también viven solo en memoria.** Recargar la página los
+  pone a cero, corran o no en ese momento: son herramientas de la sesión en curso, no datos
+  que tenga sentido conservar entre visitas.
 - **En iPhone la fiabilidad es baja.** Safari suspende las apps en segundo plano de forma
   agresiva y Apple no ofrece a terceros un equivalente al despertador del sistema.
 - **El audio necesita una interacción previa** del usuario para desbloquearse (política de
