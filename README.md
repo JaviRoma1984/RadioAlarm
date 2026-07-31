@@ -31,6 +31,28 @@ Con Apache arrancado desde el panel de XAMPP:
 
 ---
 
+## Publicarla en GitHub Pages
+
+Todas las rutas del proyecto son relativas (`css/…`, `js/…`, `icons/…`, y el
+`manifest.webmanifest` usa `"start_url": "./"` y `"scope": "./"`), así que funciona igual
+en local, en `usuario.github.io` o en `usuario.github.io/RadioAlarm/` sin cambiar nada.
+
+Con el repositorio ya creado en GitHub:
+
+```bash
+git remote add origin https://github.com/JaviRoma1984/RadioAlarm.git
+git push -u origin master
+```
+
+Y en GitHub: **Settings → Pages → Source** → rama `master`, carpeta `/ (root)` → **Save**.
+GitHub Pages sirve siempre por `https://`, que es justo lo que exige el manifest para las
+emisoras de radio (ver «Limitaciones conocidas»).
+
+La URL queda como `https://<usuario>.github.io/<repositorio>/`; en este caso,
+`https://JaviRoma1984.github.io/RadioAlarm/`, que es la que ya usa `docs/MANUAL.md`.
+
+---
+
 ## Estructura
 
 ```
@@ -235,7 +257,7 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 6 | Motor de disparo y pantalla de alarma sonando | ✅ Hecha |
 | 7 | Cronómetro y temporizador de cuenta atrás | ✅ Hecha |
 | 8 | Convertirla en PWA instalable | ✅ Hecha |
-| 9 | Publicación en GitHub Pages y manual | Pendiente |
+| 9 | Publicación en GitHub Pages y manual | Manual listo; publicación manual del usuario |
 | 10 | Envoltorio Android nativo: alarma con el móvil bloqueado y tonos del sistema | Pendiente |
 
 ---
