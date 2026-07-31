@@ -1,14 +1,16 @@
 /**
  * RadioAlarm · Punto de entrada
  *
- * Estado del proyecto: Fase 7 de 10 — cronómetro y cuenta atrás, además de las
- * alarmas. Las tres fuentes de sonido: tono, canción propia y emisora de
- * radio, y las tres pantallas de tiempo: alarmas, crono y cuenta atrás.
+ * Estado del proyecto: Fase 8 de 10 — instalable como PWA, además de las
+ * alarmas, el cronómetro y la cuenta atrás. Las tres fuentes de sonido: tono,
+ * canción propia y emisora de radio, y las tres pantallas de tiempo: alarmas,
+ * crono y cuenta atrás.
  */
 
 import { iniciarDesbloqueoAudio } from "./audio/desbloqueo.js";
 import { iniciarMotor } from "./motor/motor.js";
 import { iniciarVigilia } from "./motor/vigilia.js";
+import { iniciarPwa } from "./pwa.js";
 import { iniciarTema } from "./theme.js";
 import { iniciarListaAlarmas } from "./ui/alarmas.js";
 import { iniciarCrono } from "./ui/crono.js";
@@ -47,6 +49,7 @@ function iniciar() {
   iniciarDesbloqueoAudio();
   iniciarVigilia();
   iniciarMotor();
+  iniciarPwa();
 }
 
 iniciar();
