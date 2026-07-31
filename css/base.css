@@ -187,7 +187,10 @@ svg {
   z-index: 20;
 
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* `minmax(0, 1fr)`, no `1fr` a secas: si no, ninguna columna encoge por
+     debajo del ancho de su propio rótulo («Cuenta atrás»), y con las cuatro
+     a la vez eso basta para desbordar la barra entera. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-2);
   width: 100%;
   max-width: var(--app-width);
