@@ -318,9 +318,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   gap: var(--space-3);
   padding: var(--space-7) var(--space-4);
+  /* Centrada en el hueco real de la pantalla en vez de quedarse pegada
+     arriba con un hueco muerto debajo, antes de la barra inferior. */
+  min-height: calc(100dvh - var(--header-height) - var(--bar-espacio) - var(--fab-size));
 }
 
 .empty__icon {
@@ -358,7 +362,23 @@
 
 .vista {
   display: grid;
+  align-content: center;
   gap: var(--space-4);
+  /* Con poco contenido (el editor recién abierto, Opciones de sonido…) esto
+     centra el bloque en el hueco real entre la cabecera y la barra inferior,
+     en vez de dejarlo pegado arriba con un hueco muerto debajo. Con más
+     contenido del que cabe, no hace nada: `align-content` solo reparte el
+     espacio que sobra, así que un listado largo sigue creciendo desde arriba
+     con normalidad. */
+  min-height: calc(100dvh - var(--header-height) - var(--bar-espacio) - var(--fab-size));
+}
+
+/* El listado de alarmas crece con el tiempo: se ancla arriba como cualquier
+   lista, no se centra como el resto de pantallas de contenido corto. La
+   propia `.empty` (arriba) ya se centra por su cuenta cuando no hay ninguna. */
+[data-vista="alarmas"] {
+  align-content: start;
+  min-height: auto;
 }
 
 .vista__titulo {
@@ -902,9 +922,9 @@
 /* Centra todo el contenido de estas dos vistas, en vez de apilarlo arriba
    como el resto de pantallas. */
 .vista--reloj {
+  /* `align-content: center` y `min-height` ya los pone `.vista`; aquí solo
+     lo que es propio de esta vista. */
   justify-content: center;
-  align-content: center;
-  min-height: calc(100dvh - var(--header-height) - var(--bar-espacio) - var(--fab-size));
   text-align: center;
 }
 
