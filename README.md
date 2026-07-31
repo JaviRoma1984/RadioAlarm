@@ -31,18 +31,46 @@ Con Apache arrancado desde el panel de XAMPP:
 
 ---
 
+## Publicarla en GitHub Pages
+
+Todas las rutas del proyecto son relativas (`css/…`, `js/…`, `icons/…`, y el
+`manifest.webmanifest` usa `"start_url": "./"` y `"scope": "./"`), así que funciona igual
+en local, en `usuario.github.io` o en `usuario.github.io/RadioAlarm/` sin cambiar nada.
+
+Con el repositorio ya creado en GitHub:
+
+```bash
+git remote add origin https://github.com/JaviRoma1984/RadioAlarm.git
+git push -u origin master
+```
+
+Y en GitHub: **Settings → Pages → Source** → rama `master`, carpeta `/ (root)` → **Save**.
+GitHub Pages sirve siempre por `https://`, que es justo lo que exige el manifest para las
+emisoras de radio (ver «Limitaciones conocidas»).
+
+La URL queda como `https://<usuario>.github.io/<repositorio>/`; en este caso,
+`https://JaviRoma1984.github.io/RadioAlarm/`, que es la que ya usa `docs/MANUAL.md`.
+
+---
+
 ## Estructura
 
 ```
 RadioAlarm/
 ├── .htaccess            Desactiva la caché del navegador (solo desarrollo local)
 ├── index.html           Pantalla principal
+├── manifest.webmanifest Metadatos de instalación (nombre, iconos, colores)
+├── sw.js                Service worker: caché de la app shell para uso sin conexión
+├── icons/               Iconos de la app en varios tamaños (ver tools/generar-iconos.mjs)
+├── tools/
+│   └── generar-iconos.mjs  Genera los PNG de icons/ sin depender de ninguna librería
 ├── css/
 │   ├── tokens.css       Tokens de diseño y temas día/noche
 │   ├── base.css         Reinicio, tipografía y estructura
 │   └── components.css   Componentes reutilizables
 ├── js/
 │   ├── app.js           Punto de entrada
+│   ├── pwa.js           Registra el service worker y avisa de actualizaciones
 │   ├── theme.js         Conmutador día/noche
 │   ├── store.js         Persistencia sobre localStorage
 │   ├── audio/
@@ -149,6 +177,30 @@ tono—. Añadirlas exigiría sumar esa dependencia solo para dos emisoras, lo q
 principio de cero dependencias del proyecto. También **Máxima FM**: como emisora nacional
 dejó de emitir en 2019, sustituida por LOS40 Dance, que ya está en la lista.
 
+### PWA: instalable y sin conexión
+
+Los iconos de `icons/` no se hicieron con ninguna herramienta de imagen —no hay ninguna
+instalada en esta máquina—: `tools/generar-iconos.mjs` los genera a mano, escribiendo el
+PNG directamente (firma, `IHDR`, `IDAT` comprimido con el `zlib` de Node, `IEND`, con su
+propio CRC32) y dibujando el logotipo píxel a píxel con geometría simple (distancia a un
+círculo, distancia a un segmento), a 4x el tamaño final y reducido después para suavizar
+los bordes. Se ejecuta a mano, una vez, cuando hace falta regenerarlos:
+
+```bash
+node tools/generar-iconos.mjs
+```
+
+`sw.js` cachea la app shell (HTML, CSS, JS, iconos) para que la aplicación abra sin
+conexión: red primero y con reserva en caché para la navegación, caché primero para todo
+lo demás del mismo origen —así cualquier módulo JS nuevo se cachea solo la primera vez que
+se pide—. Las peticiones a otros orígenes (las emisoras de radio) no las toca: nunca tendría
+sentido cachear un directo.
+
+El service worker nuevo no se activa solo (nada de `skipWaiting`): se queda esperando a
+que se cierren todas las pestañas, para no cortar una alarma sonando o un cronómetro en
+marcha a media ejecución. `js/pwa.js` solo avisa, con un toast, de que hay una versión
+nueva que se aplicará la próxima vez que se abra la app.
+
 ---
 
 ## Pruebas
@@ -204,8 +256,8 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 | 5 | Fuentes de sonido: tonos sintetizados, canción y radio | ✅ Hecha |
 | 6 | Motor de disparo y pantalla de alarma sonando | ✅ Hecha |
 | 7 | Cronómetro y temporizador de cuenta atrás | ✅ Hecha |
-| 8 | Convertirla en PWA instalable | Pendiente |
-| 9 | Publicación en GitHub Pages y manual | Pendiente |
+| 8 | Convertirla en PWA instalable | ✅ Hecha |
+| 9 | Publicación en GitHub Pages y manual | Manual listo; publicación manual del usuario |
 | 10 | Envoltorio Android nativo: alarma con el móvil bloqueado y tonos del sistema | Pendiente |
 
 ---
@@ -252,6 +304,10 @@ Documentadas aquí desde el principio porque condicionan el diseño:
   selector de carpetas ni acceso en vivo al sistema de archivos (eso exigiría volver a
   pedir permiso en cada sesión y no funciona en móvil). La contrapartida es la cuota de
   almacenamiento del navegador, normalmente holgada pero no ilimitada.
+- **El modo sin conexión necesita una primera visita con red.** El service worker cachea
+  la app shell la primera vez que se abre; hasta entonces no hay nada guardado. Y si se
+  cambia algo dentro de `sw.js` (por ejemplo, la lista de la caché), hay que subir a mano
+  la constante `VERSION` para que el navegador lo trate como una versión nueva.
 - **Un audio de canción reemplazado o quitado no se borra solo de IndexedDB.** Una alarma
   nueva parte del mismo archivo que el favorito global (no de una copia), así que borrar
   "el anterior" al elegir uno distinto podría borrar el de otra alarma sin que nadie lo
