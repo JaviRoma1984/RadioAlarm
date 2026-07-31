@@ -689,7 +689,7 @@
   background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 3.25rem;
+  font-size: var(--text-clock);
   font-weight: var(--weight-bold);
   letter-spacing: -0.02em;
   text-align: center;
