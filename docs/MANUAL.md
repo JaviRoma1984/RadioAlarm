@@ -67,13 +67,18 @@ de bienvenida.
 **Botón flotante «Crear».** El círculo turquesa con el signo **+**, centrado justo encima
 de la barra inferior. Es la acción principal: crear una alarma nueva.
 
-**Barra inferior.** Las tres acciones secundarias:
+**Barra inferior.** Las cuatro acciones secundarias:
 
 | Botón | Icono | Para qué sirve |
 |---|---|---|
+| **Alarmas** | Despertador | Volver al panel principal, el listado de alarmas |
 | **Crono** | Cronómetro | Medir tiempo hacia adelante |
 | **Cuenta atrás** | Reloj de arena | Temporizador que avisa al llegar a cero |
 | **Sonido** | Altavoz | Elegir el tono, la canción y la emisora favoritos |
+
+**Alarmas** es la única forma de volver al listado desde **Crono** o **Cuenta atrás**:
+esas dos pantallas no tienen su propio botón «Volver atrás», porque ninguna de las dos
+tiene nada que guardar o descartar.
 
 ---
 

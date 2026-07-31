@@ -440,6 +440,31 @@
 
       <!-- ================= Barra de acciones ================= -->
       <nav class="app__bar" aria-label="Acciones principales">
+        <!-- Vuelve al panel principal: única salida directa desde Crono y Cuenta
+             atrás, que no tienen su propio botón «Volver atrás». -->
+        <button
+          class="bar-btn"
+          type="button"
+          data-vista-destino="alarmas"
+          aria-label="Alarmas"
+          title="Alarmas"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4.5 4 7 6.2M19.5 4 17 6.2" />
+            <circle cx="12" cy="13.5" r="7.5" />
+            <path d="M12 10v3.5l2.25 1.5" />
+          </svg>
+          <span>Alarmas</span>
+        </button>
+
         <button
           class="bar-btn"
           type="button"
