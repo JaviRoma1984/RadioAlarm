@@ -22,6 +22,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    // El nombre de archivo por defecto de Gradle es app-debug.apk /
+    // app-release.apk; esto lo deja siempre como RadioAlarm.apk.
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "RadioAlarm.apk"
+        }
+    }
 }
 
 repositories {
