@@ -47,6 +47,15 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- Lo arranca AlarmReceiver; ver AlarmService.java. "shortService" es
+             el tipo pensado para exactamente esto (Android 14+): una tarea
+             breve y puntual, sin encajar en categorías como "mediaPlayback"
+             o "location" que no describen lo que hace en realidad. -->
+        <service
+            android:name=".AlarmService"
+            android:exported="false"
+            android:foregroundServiceType="shortService" />
     </application>
 
     <!-- Permissions -->
@@ -68,4 +77,7 @@
          (el "autoarranque" de ColorOS, por ejemplo): esto solo es la parte
          de Android en sí. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- El servicio en primer plano de AlarmService, y su tipo concreto. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
 </manifest>
