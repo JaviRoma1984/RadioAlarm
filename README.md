@@ -266,6 +266,13 @@ tokens semánticos y aclara ligeramente el turquesa para mantener el contraste.
 
 Documentadas aquí desde el principio porque condicionan el diseño:
 
+- **Brave para Android ha mostrado la interfaz mal dimensionada** en pruebas reales (texto
+  cortado, contenido más ancho que la pantalla), en un dispositivo donde Chrome para
+  Android muestra la misma página correctamente —con el mismo motor Chromium debajo—.
+  No se ha podido reproducir en escritorio (Brave de PC se ve bien) ni aislar la causa
+  exacta; puede ser alguna de las funciones propias de Brave (Shields, su propio zoom de
+  página). Con Chrome para Android confirmado como correcto, no se ha investigado más por
+  ahora.
 - **Como web, la app debe permanecer abierta** para que la alarma suene. No existe una API
   web fiable para programar un aviso futuro con todo cerrado. La Fase 6 lo mitiga con Wake
   Lock —mantiene la pantalla encendida mientras haya una alarma próxima, un cronómetro
