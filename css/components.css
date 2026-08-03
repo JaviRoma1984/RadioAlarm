@@ -708,7 +708,13 @@
 }
 
 .editor__nombre {
+  /* Más contenido que "todo el ancho disponible": confirmado en un móvil
+     real que a lo ancho de las tarjetas se veía desproporcionado, aunque en
+     otros navegadores la caja midiera lo mismo que ellas. Con un tope y
+     centrado por márgenes, no depende de igualar el ancho de nada más. */
   width: 100%;
+  max-width: 15rem;
+  margin-inline: auto;
   padding: var(--space-2) var(--space-1);
   border: none;
   border-bottom: 2px solid var(--border-strong);
