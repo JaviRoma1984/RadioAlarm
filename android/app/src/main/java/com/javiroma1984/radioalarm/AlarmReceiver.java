@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.PowerManager;
+import android.util.Log;
 
 /**
  * Lo que AlarmManager dispara a la hora programada.
@@ -20,11 +21,15 @@ import android.os.PowerManager;
  */
 public class AlarmReceiver extends BroadcastReceiver {
 
+    /** Mismo tag en todo el codigo nativo, para filtrar en un solo sitio con adb logcat. */
+    private static final String TAG = "RadioAlarm";
+
     private static final String EXTRA_ID_ALARMA = "idAlarma";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         String idAlarma = intent.getStringExtra(EXTRA_ID_ALARMA);
+        Log.i(TAG, "AlarmReceiver.onReceive id=" + idAlarma);
 
         // Wake lock breve: solo para cubrir el hueco entre que llega el
         // broadcast y el servicio llega a publicar su propia notificación
@@ -44,6 +49,9 @@ public class AlarmReceiver extends BroadcastReceiver {
             } else {
                 context.startService(intentServicio);
             }
+            Log.i(TAG, "AlarmReceiver: AlarmService arrancado");
+        } catch (Exception excepcion) {
+            Log.e(TAG, "AlarmReceiver: no se pudo arrancar AlarmService", excepcion);
         } finally {
             if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         }

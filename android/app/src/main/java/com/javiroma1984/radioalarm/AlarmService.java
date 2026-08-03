@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -28,6 +29,9 @@ import androidx.core.app.NotificationCompat;
  */
 public class AlarmService extends Service {
 
+    /** Mismo tag en todo el codigo nativo, para filtrar en un solo sitio con adb logcat. */
+    private static final String TAG = "RadioAlarm";
+
     private static final String CANAL_ID = "radioalarm-alarmas";
     private static final String EXTRA_ID_ALARMA = "idAlarma";
 
@@ -40,6 +44,7 @@ public class AlarmService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String idAlarma = intent != null ? intent.getStringExtra(EXTRA_ID_ALARMA) : null;
         int idNotificacion = idAlarma != null ? idAlarma.hashCode() : 0;
+        Log.i(TAG, "AlarmService.onStartCommand id=" + idAlarma);
 
         crearCanalNotificacion();
 
@@ -55,20 +60,29 @@ public class AlarmService extends Service {
             .setContentIntent(pendingAbrir)
             .setOngoing(true);
 
-        // Todo servicio en primer plano necesita publicar su notificación
-        // en los primeros segundos, o el sistema lo mata: es justo la misma
-        // notificación de pantalla completa, no una aparte.
-        startForeground(idNotificacion, aviso.build());
+        try {
+            // Todo servicio en primer plano necesita publicar su
+            // notificación en los primeros segundos, o el sistema lo mata:
+            // es justo la misma notificación de pantalla completa, no una
+            // aparte.
+            startForeground(idNotificacion, aviso.build());
+            Log.i(TAG, "AlarmService: startForeground OK");
+        } catch (Exception excepcion) {
+            Log.e(TAG, "AlarmService: startForeground FALLÓ", excepcion);
+        }
 
         try {
             startActivity(crearIntentAbrir(idAlarma));
+            Log.i(TAG, "AlarmService: startActivity OK");
         } catch (Exception excepcion) {
             // Restringido en este Android o fabricante en concreto: queda la
             // notificación como único camino, a la espera de que el usuario
             // la toque.
+            Log.e(TAG, "AlarmService: startActivity FALLÓ", excepcion);
         }
 
         manejador.postDelayed(() -> {
+            Log.i(TAG, "AlarmService: parando tras " + DURACION_MS + "ms");
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
         }, DURACION_MS);

@@ -10,6 +10,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Log;
+
+import java.util.Date;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -42,6 +45,9 @@ import org.json.JSONException;
 )
 public class AlarmSchedulerPlugin extends Plugin {
 
+    /** Mismo tag en todo el código nativo, para filtrar en un solo sitio con adb logcat. */
+    private static final String TAG = "RadioAlarm";
+
     @PluginMethod
     public void programar(PluginCall call) {
         String id = call.getString("id");
@@ -60,6 +66,7 @@ public class AlarmSchedulerPlugin extends Plugin {
 
         AlarmManager.AlarmClockInfo info = new AlarmManager.AlarmClockInfo(cuando, crearPendingIntentMostrar());
         gestor.setAlarmClock(info, crearPendingIntentDisparo(id));
+        Log.i(TAG, "programar id=" + id + " cuando=" + new Date(cuando) + " (permiso alarmas exactas=" + puedeProgramarExactas() + ")");
 
         call.resolve();
     }
@@ -72,6 +79,7 @@ public class AlarmSchedulerPlugin extends Plugin {
             return;
         }
 
+        Log.i(TAG, "cancelar id=" + id);
         AlarmManager gestor = obtenerGestor();
         if (gestor != null) {
             gestor.cancel(crearPendingIntentDisparo(id));
