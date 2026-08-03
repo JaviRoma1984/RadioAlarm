@@ -134,7 +134,9 @@
 
 .alarma {
   display: grid;
-  grid-template-columns: 1fr auto;
+  /* `minmax(0, 1fr)`: un nombre de alarma sin espacios y muy largo no debe
+     poder ensanchar la fila más que la pantalla. */
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-3);
 
@@ -482,7 +484,8 @@
 
 .opcion {
   display: grid;
-  grid-template-columns: auto 1fr;
+  /* `minmax(0, 1fr)`: mismo motivo que en `.alarma`. */
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: var(--space-3);
 
@@ -676,6 +679,13 @@
    -------------------------------------------------------------------------- */
 
 .editor__encabezado {
+  /* Sin esto, el ancho intrínseco de `#editor-hora` —un control nativo, no
+     texto normal— puede forzar esta cabecera, y con ella toda la columna de
+     `.vista`, más ancha que la pantalla. Es el mismo fallo de `.panel` y
+     `.segmento`, en un sitio que se había quedado sin tocar: por eso era la
+     única pantalla —la única con un `<input type="time">`— que salía con
+     otras proporciones que el resto. */
+  min-width: 0;
   display: grid;
   justify-items: center;
   gap: var(--space-2);
@@ -709,6 +719,13 @@
 }
 
 .editor__hora {
+  /* A diferencia de `.editor__nombre`, este control es nativo: el navegador
+     decide su ancho intrínseco, no el texto que contiene. Confirmado en
+     varios navegadores del móvil que ese ancho puede ser bastante mayor de
+     lo que ocupa "15:00" en pantalla; `max-width: 100%` le pone techo al
+     tamaño de caja aunque el navegador quisiera dárselo más grande por
+     dentro. */
+  max-width: 100%;
   padding: var(--space-1) var(--space-2);
   border: none;
   border-radius: var(--radius-md);
@@ -961,7 +978,8 @@
 
 .reloj-grande__acciones {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Misma cautela que en `.acciones` y la barra inferior: ver esas notas. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-3);
   margin-top: var(--space-5);
 }
@@ -1074,7 +1092,10 @@
 /* Fila de acciones al pie de una vista. */
 .acciones {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* `minmax(0, 1fr)`, no `1fr` a secas: mismo motivo que en la barra
+     inferior y el segmentado, para que ninguna de las dos columnas pueda
+     forzarse más ancha que su mitad por el texto del botón. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-3);
 }
 
