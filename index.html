@@ -137,7 +137,7 @@
           <h2 class="vista__titulo">Opciones de sonido</h2>
 
           <!-- Solo aparece en la app de Android, y solo si falta alguno de los
-               dos permisos: sin ellos, las alarmas no suenan o no se muestran
+               tres permisos: sin ellos, las alarmas no suenan o no se muestran
                bien con el móvil bloqueado o la aplicación cerrada. -->
           <section class="panel panel--aviso" id="aviso-permiso-alarma" hidden>
             <h3 class="panel__titulo">Faltan permisos</h3>
@@ -146,6 +146,9 @@
               bloqueado o la aplicación cerrada.
             </p>
             <div class="aviso-permiso__botones">
+              <button class="btn btn--primario" type="button" id="btn-permiso-notificaciones" hidden>
+                Permitir notificaciones
+              </button>
               <button class="btn btn--primario" type="button" id="btn-permiso-alarma" hidden>
                 Permitir alarmas exactas
               </button>

@@ -133,16 +133,16 @@ function pluginAlarma() {
 }
 
 /**
- * Dos permisos, los dos con el mismo patrón en Android 12+/14+: hay que
- * concederlos a mano en los ajustes del sistema, y sin ellos la app sigue
- * funcionando pero las alarmas no suenan o no se muestran bien con el móvil
- * bloqueado o la aplicación cerrada, sin ninguna pista de por qué. Solo se
- * ve en la app nativa; se muestra el botón de cada uno que falte, y el
- * aviso entero se oculta en cuanto no falta ninguno.
+ * Tres permisos que Android puede negar en silencio, cada uno con su
+ * propio motivo por el que la alarma dejaría de sonar o de mostrarse bien
+ * con el móvil bloqueado o la aplicación cerrada. Solo se ve en la app
+ * nativa; se muestra el botón de cada uno que falte, y el aviso entero se
+ * oculta en cuanto no falta ninguno.
  */
 async function actualizarAvisoPermiso() {
   const nativo = pluginAlarma();
   const aviso = document.getElementById("aviso-permiso-alarma");
+  const btnNotificaciones = document.getElementById("btn-permiso-notificaciones");
   const btnAlarma = document.getElementById("btn-permiso-alarma");
   const btnPantalla = document.getElementById("btn-permiso-pantalla");
   if (!aviso) return;
@@ -153,14 +153,16 @@ async function actualizarAvisoPermiso() {
   }
 
   try {
-    const [alarma, pantalla] = await Promise.all([
+    const [notificaciones, alarma, pantalla] = await Promise.all([
+      nativo.tienePermisoNotificaciones(),
       nativo.tienePermisoAlarmasExactas(),
       nativo.tienePermisoPantallaCompleta(),
     ]);
 
+    if (btnNotificaciones) btnNotificaciones.hidden = notificaciones.concedido;
     if (btnAlarma) btnAlarma.hidden = alarma.concedido;
     if (btnPantalla) btnPantalla.hidden = pantalla.concedido;
-    aviso.hidden = alarma.concedido && pantalla.concedido;
+    aviso.hidden = notificaciones.concedido && alarma.concedido && pantalla.concedido;
   } catch {
     aviso.hidden = true;
   }
@@ -223,6 +225,14 @@ export function iniciarSonido() {
 
   document.getElementById("btn-guardar-sonido")?.addEventListener("click", guardar);
   document.getElementById("btn-volver-sonido")?.addEventListener("click", volver);
+
+  document.getElementById("btn-permiso-notificaciones")?.addEventListener("click", async () => {
+    // Este, a diferencia de los otros dos, muestra el diálogo del propio
+    // sistema en vez de abrir sus ajustes: el resultado llega al momento,
+    // sin depender de "vista:cambiada" al volver de ningún lado.
+    await pluginAlarma()?.solicitarPermisoNotificaciones();
+    actualizarAvisoPermiso();
+  });
 
   document.getElementById("btn-permiso-alarma")?.addEventListener("click", async () => {
     await pluginAlarma()?.solicitarPermisoAlarmasExactas();

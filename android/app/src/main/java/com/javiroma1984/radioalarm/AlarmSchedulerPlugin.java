@@ -1,5 +1,6 @@
 package com.javiroma1984.radioalarm;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,10 +13,13 @@ import android.provider.Settings;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import org.json.JSONException;
 
@@ -30,7 +34,12 @@ import org.json.JSONException;
  * batería que sí afectan a las demás, y muestra el icono de reloj propio de
  * una alarma en la barra de estado.
  */
-@CapacitorPlugin(name = "AlarmScheduler")
+@CapacitorPlugin(
+    name = "AlarmScheduler",
+    permissions = {
+        @Permission(alias = "notificaciones", strings = { Manifest.permission.POST_NOTIFICATIONS })
+    }
+)
 public class AlarmSchedulerPlugin extends Plugin {
 
     @PluginMethod
@@ -168,6 +177,45 @@ public class AlarmSchedulerPlugin extends Plugin {
         }
 
         call.resolve();
+    }
+
+    /**
+     * A diferencia de los otros dos, este es un permiso "normal" (no de
+     * acceso especial): se pide con el diálogo de siempre del sistema, no
+     * abriendo los ajustes. Sin concederlo, `NotificationManager.notify()`
+     * de AlarmReceiver no hace nada en absoluto —ni error ni aviso, solo
+     * silencio—, así que ni la notificación ni la pantalla completa ni la
+     * apertura de la app llegan a pasar nunca. Es el que de verdad hacía
+     * falta para que la alarma sonara con la app cerrada del todo.
+     */
+    @PluginMethod
+    public void tienePermisoNotificaciones(PluginCall call) {
+        JSObject resultado = new JSObject();
+        resultado.put("concedido", tieneNotificacionesConcedidas());
+        call.resolve(resultado);
+    }
+
+    @PluginMethod
+    public void solicitarPermisoNotificaciones(PluginCall call) {
+        if (tieneNotificacionesConcedidas()) {
+            call.resolve();
+            return;
+        }
+
+        requestPermissionForAlias("notificaciones", call, "alRecibirPermisoNotificaciones");
+    }
+
+    @PermissionCallback
+    private void alRecibirPermisoNotificaciones(PluginCall call) {
+        JSObject resultado = new JSObject();
+        resultado.put("concedido", tieneNotificacionesConcedidas());
+        call.resolve(resultado);
+    }
+
+    private boolean tieneNotificacionesConcedidas() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true;
+
+        return getPermissionState("notificaciones") == PermissionState.GRANTED;
     }
 
     /**
