@@ -404,6 +404,17 @@
     border-color var(--dur-base) var(--ease);
 }
 
+/* Falta un permiso del sistema (alarmas exactas, solo Android nativo): mismo
+   color que los avisos flotantes, para que se lea igual de importante. */
+.panel--aviso {
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+  background-color: var(--warn-soft);
+}
+
+.panel--aviso .panel__titulo {
+  color: var(--warn);
+}
+
 .panel__titulo {
   margin-bottom: var(--space-1);
   font-size: var(--text-lg);

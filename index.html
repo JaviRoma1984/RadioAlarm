@@ -136,6 +136,20 @@
         <section class="vista" data-vista="sonido" aria-label="Opciones de sonido" hidden>
           <h2 class="vista__titulo">Opciones de sonido</h2>
 
+          <!-- Solo aparece en la app de Android, y solo si el sistema no ha
+               concedido el permiso de alarmas exactas: sin él, las alarmas no
+               suenan con la app cerrada o el móvil bloqueado. -->
+          <section class="panel panel--aviso" id="aviso-permiso-alarma" hidden>
+            <h3 class="panel__titulo">Falta un permiso</h3>
+            <p class="panel__ayuda">
+              Sin el permiso de «Alarmas y recordatorios», las alarmas no sonarán con el
+              móvil bloqueado o la aplicación cerrada.
+            </p>
+            <button class="btn btn--primario" type="button" id="btn-permiso-alarma">
+              Conceder permiso
+            </button>
+          </section>
+
           <section class="panel">
             <div class="panel__cabecera">
               <h3 class="panel__titulo">Tono</h3>

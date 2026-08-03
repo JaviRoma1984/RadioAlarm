@@ -124,6 +124,38 @@ function marcarCambios(valor = true) {
   document.getElementById("btn-guardar-sonido")?.classList.toggle("btn--pendiente", valor);
 }
 
+/**
+ * Solo existe dentro del envoltorio Android (ver js/nativo.js); en el
+ * navegador `window.Capacitor` no existe y esto no hace nada.
+ */
+function pluginAlarma() {
+  return window.Capacitor?.Plugins?.AlarmScheduler ?? null;
+}
+
+/**
+ * Sin el permiso de «Alarmas y recordatorios» (Android 12+), AlarmManager no
+ * deja programar una alarma exacta: la app seguiría funcionando, pero las
+ * alarmas nunca sonarían con el móvil bloqueado o la aplicación cerrada, sin
+ * ninguna pista de por qué. Este aviso solo se ve en la app nativa.
+ */
+async function actualizarAvisoPermiso() {
+  const nativo = pluginAlarma();
+  const aviso = document.getElementById("aviso-permiso-alarma");
+  if (!aviso) return;
+
+  if (!nativo) {
+    aviso.hidden = true;
+    return;
+  }
+
+  try {
+    const { concedido } = await nativo.tienePermisoAlarmasExactas();
+    aviso.hidden = Boolean(concedido);
+  } catch {
+    aviso.hidden = true;
+  }
+}
+
 /** Recarga el borrador desde lo guardado y repinta. Se llama al abrir la vista. */
 export function refrescarSonido() {
   borrador = configuracionSonido();
@@ -132,6 +164,7 @@ export function refrescarSonido() {
   pintarRecursos();
   selectorCancion.pintar();
   selectorEmisora.pintar();
+  actualizarAvisoPermiso();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -181,10 +214,24 @@ export function iniciarSonido() {
   document.getElementById("btn-guardar-sonido")?.addEventListener("click", guardar);
   document.getElementById("btn-volver-sonido")?.addEventListener("click", volver);
 
+  document.getElementById("btn-permiso-alarma")?.addEventListener("click", async () => {
+    await pluginAlarma()?.solicitarPermisoAlarmasExactas();
+    // Los ajustes del sistema se abren por encima; al volver a esta pantalla
+    // (vista:cambiada) se vuelve a comprobar solo, pero esto lo refresca ya
+    // por si el usuario concede el permiso y no llega a salir de la app.
+    actualizarAvisoPermiso();
+  });
+
   // Al abrir la vista se descarta cualquier borrador anterior; al salir de ella
   // se corta cualquier tono de muestra que siguiera sonando.
   document.addEventListener("vista:cambiada", (evento) => {
     if (evento.detail.vista === "sonido") refrescarSonido();
     else silenciarTodo();
+  });
+
+  // Concedido el permiso desde los ajustes del sistema (fuera de la app), al
+  // volver a ella conviene refrescar el aviso sin esperar a cambiar de vista.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") actualizarAvisoPermiso();
   });
 }

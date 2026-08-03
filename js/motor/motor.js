@@ -255,6 +255,17 @@ function tick() {
 /*  Arranque                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Activa el aviso de sonando para una alarma programada de forma nativa
+ * (Android, ver js/nativo.js): reutiliza `encolar` tal cual, así que se
+ * comporta exactamente igual que si el tick la hubiera detectado ahora
+ * mismo —cola, pospuesto, "una vez" que se autodesactiva, todo igual—.
+ */
+export function activarAlarmaNativa(id) {
+  const alarma = obtenerAlarma(id);
+  if (alarma) encolar(alarma, new Date());
+}
+
 export function iniciarMotor() {
   document.getElementById("btn-posponer-alarma")?.addEventListener("click", posponer);
   document.getElementById("btn-descartar-alarma")?.addEventListener("click", descartar);
