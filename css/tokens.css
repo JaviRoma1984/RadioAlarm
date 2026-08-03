@@ -65,6 +65,10 @@
   /* Botón redondo flotante de «Crear» */
   --fab-size: 3.5rem;
 
+  /* Alto de cada número de la rueda de la hora del editor (ver
+     js/ui/ruedaHora.js): tiene que coincidir con `ALTURA_ITEM_REM` ahí. */
+  --rueda-hora-item: 3.25rem;
+
   /* --- Ancho de la columna de la app ----------------------------------- */
   /* Diseño «primero móvil»: en escritorio se centra como un panel estrecho. */
   --app-width: 30rem;

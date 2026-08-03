@@ -225,7 +225,14 @@
               placeholder="Nombre de la alarma"
               aria-label="Nombre de la alarma"
             />
-            <input type="time" class="editor__hora tabular" id="editor-hora" aria-label="Hora de la alarma" />
+            <div class="rueda-hora" role="group" aria-label="Hora de la alarma">
+              <div class="rueda-hora__pista">
+                <div class="rueda-hora__columna tabular" id="rueda-horas"></div>
+                <span class="rueda-hora__separador">:</span>
+                <div class="rueda-hora__columna tabular" id="rueda-minutos"></div>
+              </div>
+              <div class="rueda-hora__marco" aria-hidden="true"></div>
+            </div>
           </div>
 
           <section class="panel">

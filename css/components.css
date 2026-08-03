@@ -738,32 +738,78 @@
   border-color: var(--accent);
 }
 
-.editor__hora {
-  /* A diferencia de `.editor__nombre`, este control es nativo: el navegador
-     decide su ancho intrínseco, no el texto que contiene. Confirmado en
-     varios navegadores del móvil que ese ancho puede ser bastante mayor de
-     lo que ocupa "15:00" en pantalla; `max-width: 100%` le pone techo al
-     tamaño de caja aunque el navegador quisiera dárselo más grande por
-     dentro. */
-  max-width: 100%;
-  padding: var(--space-1) var(--space-2);
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: var(--text-clock);
-  font-weight: var(--weight-bold);
-  letter-spacing: -0.02em;
-  text-align: center;
-  color-scheme: light dark;
-  transition: background-color var(--dur-fast) var(--ease);
+/* --------------------------------------------------------------------------
+   Rueda de la hora
+   Sustituye al `<input type="time">` nativo: su selector emergente lo dibuja
+   el sistema, sin margen para tocar su estilo. Dos columnas que se deslizan
+   como una ruleta, con `scroll-snap` al número que quede más centrado —ver
+   `js/ui/ruedaHora.js`—.
+   -------------------------------------------------------------------------- */
+
+.rueda-hora {
+  position: relative;
+  display: flex;
+  justify-content: center;
 }
 
-.editor__hora:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  background-color: var(--accent-soft);
+.rueda-hora__pista {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rueda-hora__columna {
+  /* Tres números a la vista: el de en medio, seleccionado, y uno de
+     adelanto arriba y abajo. */
+  height: calc(var(--rueda-hora-item) * 3);
+  width: 4rem;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  /* El primer y el último número también tienen que poder llegar al centro:
+     este relleno deja un hueco de un número entero arriba y abajo. */
+  padding-block: var(--rueda-hora-item);
+  scrollbar-width: none;
+}
+
+.rueda-hora__columna::-webkit-scrollbar {
+  display: none;
+}
+
+.rueda-hora__item {
+  height: var(--rueda-hora-item);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  font-size: var(--text-clock);
+  font-weight: var(--weight-bold);
+  color: var(--text-faint);
+  letter-spacing: -0.02em;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.rueda-hora__item[data-seleccionado="true"] {
+  color: var(--text);
+}
+
+.rueda-hora__separador {
+  font-size: var(--text-clock);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+/* El marco que señala la franja central, por encima de las dos columnas. */
+.rueda-hora__marco {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: var(--rueda-hora-item);
+  transform: translateY(-50%);
+  border-top: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  pointer-events: none;
 }
 
 /* --------------------------------------------------------------------------

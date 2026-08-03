@@ -19,6 +19,7 @@
 import { DIAS_SEMANA, FUENTE, POSPONER, REPETICION, crearAlarma } from "../model/alarma.js";
 import { nombreTono } from "../datos/tonos.js";
 import { borrarAlarma, guardarAlarma, obtenerAlarma } from "../model/alarmas.js";
+import { crearRuedaHora } from "./ruedaHora.js";
 import { crearSelectorCancion } from "./selectorCancion.js";
 import { configuracionSonido } from "./sonido.js";
 import { toast } from "./toast.js";
@@ -37,6 +38,15 @@ const selectorCancion = crearSelectorCancion({
   obtener: () => borrador.sonido.cancion,
   establecer(recurso) {
     borrador.sonido.cancion = recurso;
+    marcarCambios();
+  },
+});
+
+const ruedaHora = crearRuedaHora({
+  contenedorHoras: document.getElementById("rueda-horas"),
+  contenedorMinutos: document.getElementById("rueda-minutos"),
+  onCambiar(hora) {
+    borrador.hora = hora;
     marcarCambios();
   },
 });
@@ -160,8 +170,7 @@ function pintar() {
   const nombre = document.getElementById("editor-nombre");
   if (nombre) nombre.value = editandoId ? borrador.nombre : "";
 
-  const hora = document.getElementById("editor-hora");
-  if (hora) hora.value = borrador.hora;
+  ruedaHora.pintar(borrador.hora);
 
   document
     .querySelectorAll('#editor-repeticion input[type="radio"]')
@@ -326,13 +335,6 @@ function borrarDesdeEditor() {
 export function iniciarEditor() {
   document.getElementById("editor-nombre")?.addEventListener("input", (evento) => {
     borrador.nombre = evento.target.value;
-    marcarCambios();
-  });
-
-  document.getElementById("editor-hora")?.addEventListener("input", (evento) => {
-    // El navegador solo entrega "" o una hora completa "HH:MM": nunca un valor
-    // parcial a medio escribir, así que no hace falta validar aquí.
-    if (evento.target.value) borrador.hora = evento.target.value;
     marcarCambios();
   });
 
