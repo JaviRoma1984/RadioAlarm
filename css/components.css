@@ -700,7 +700,10 @@
   display: grid;
   justify-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-1) var(--space-4);
+  /* Margen lateral igual al de `.panel` (var(--space-4) en los dos), para
+     que el nombre y la hora queden alineados con el contenido de las
+     tarjetas de abajo en vez de acercarse más a los bordes de la pantalla. */
+  padding: var(--space-2) var(--space-4) var(--space-4);
   text-align: center;
 }
 
