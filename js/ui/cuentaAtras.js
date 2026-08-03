@@ -20,7 +20,7 @@
 import { pararAlarmaTono, sonarAlarmaTono } from "../audio/sintetizador.js";
 import { crearCuentaAtras, formatoReloj } from "../motor/tiempo.js";
 import { detenerVibracion, iniciarVibracion } from "../motor/vibracion.js";
-import { establecerNecesidad } from "../motor/vigilia.js";
+import { encenderPantallaNativa, establecerNecesidad } from "../motor/vigilia.js";
 import { configuracionSonido } from "./sonido.js";
 import { vistaActual } from "./vistas.js";
 
@@ -129,6 +129,7 @@ function finalizar() {
   detenerTick();
   establecerNecesidad(RAZON_VIGILIA, false);
 
+  encenderPantallaNativa();
   mostrarAvisoFin();
   iniciarVibracion();
   sonarAlarmaTono(configuracionSonido().tono, { rampaMs: RAMPA_MS });

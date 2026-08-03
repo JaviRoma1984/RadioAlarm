@@ -1,11 +1,13 @@
 package com.javiroma1984.radioalarm;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
 import android.provider.Settings;
 
 import com.getcapacitor.JSArray;
@@ -109,6 +111,66 @@ public class AlarmSchedulerPlugin extends Plugin {
     }
 
     /**
+     * Fuerza el encendido real de la pantalla, aunque estuviera apagada por
+     * el móvil bloqueado a mano.
+     *
+     * `setShowWhenLocked`/`setTurnScreenOn` de MainActivity (ver ese
+     * archivo) solo sirven cuando la actividad se abre o se trae al frente
+     * de nuevo con la pantalla apagada —el caso de una notificación a
+     * pantalla completa—; no hacen nada si la actividad ya estaba abierta y
+     * en pausa, que es justo lo que pasa cuando la app se deja abierta y se
+     * bloquea el móvil a mano antes de que suene la alarma: el motor JS
+     * (que sigue corriendo) detecta la alarma él solo, pero la pantalla
+     * sigue apagada hasta que alguien la desbloquea. Un wake lock con
+     * `ACQUIRE_CAUSES_WAKEUP` sí la encita de verdad en ese momento. Se
+     * suelta a los 10 segundos: de ahí en adelante, la propia Wake Lock web
+     * de la app (ya con la pantalla encendida y la página visible) la
+     * mantiene encendida.
+     */
+    @SuppressWarnings("deprecation")
+    @PluginMethod
+    public void encenderPantalla(PluginCall call) {
+        PowerManager gestor = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+
+        if (gestor != null) {
+            PowerManager.WakeLock wakeLock = gestor.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
+                "RadioAlarm:EncenderPantalla"
+            );
+            wakeLock.acquire(10000);
+        }
+
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void tienePermisoPantallaCompleta(PluginCall call) {
+        JSObject resultado = new JSObject();
+        resultado.put("concedido", puedeUsarPantallaCompleta());
+        call.resolve(resultado);
+    }
+
+    /**
+     * Igual que las alarmas exactas: en Android 14+ este permiso también
+     * hay que concederlo a mano en los ajustes del sistema. Sin él, la
+     * notificación de pantalla completa de AlarmReceiver se queda como una
+     * notificación normal —nunca llega a abrir la app sola—, que es
+     * necesario sobre todo cuando la app está cerrada del todo (con la app
+     * abierta, `encenderPantalla` ya cubre el caso más común).
+     */
+    @PluginMethod
+    public void solicitarPermisoPantallaCompleta(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && !puedeUsarPantallaCompleta()) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT);
+            intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+        }
+
+        call.resolve();
+    }
+
+    /**
      * Si la app se ha abierto porque una notificación de alarma la lanzó
      * (pantalla bloqueada o app cerrada), devuelve el id de esa alarma y lo
      * consume: una llamada posterior ya no lo repite, así que al pasar a
@@ -152,6 +214,13 @@ public class AlarmSchedulerPlugin extends Plugin {
 
         AlarmManager gestor = obtenerGestor();
         return gestor != null && gestor.canScheduleExactAlarms();
+    }
+
+    private boolean puedeUsarPantallaCompleta() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return true;
+
+        NotificationManager gestor = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        return gestor != null && gestor.canUseFullScreenIntent();
     }
 
     private AlarmManager obtenerGestor() {

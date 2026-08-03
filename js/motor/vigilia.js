@@ -23,6 +23,22 @@
  * recupera la visibilidad, mientras siga haciendo falta.
  */
 
+/**
+ * Fuerza el encendido real de la pantalla en el envoltorio Android nativo
+ * (fuera de él, `window.Capacitor` no existe y no hace nada).
+ *
+ * La propia Wake Lock de aquí arriba solo puede *mantener* encendida una
+ * pantalla que ya lo está: no puede encender una que esté apagada porque el
+ * móvil se bloqueó a mano mientras la app seguía abierta —justo lo que pasa
+ * al saltar una alarma en ese momento—. Por eso al empezar a sonar una
+ * alarma (`motor/motor.js`) o al terminar una cuenta atrás
+ * (`ui/cuentaAtras.js`) se llama a esto primero: enciende la pantalla de
+ * verdad, y a partir de ahí ya es la Wake Lock web la que la mantiene así.
+ */
+export function encenderPantallaNativa() {
+  window.Capacitor?.Plugins?.AlarmScheduler?.encenderPantalla().catch(() => {});
+}
+
 let bloqueo = null;
 
 /** Claves de quien la necesita ahora mismo: `"alarmas"`, `"crono"`, `"cuenta-atras"`… */

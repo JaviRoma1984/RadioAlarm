@@ -28,7 +28,7 @@ import { obtenerAudio } from "../store/audioBlobs.js";
 import { pararAlarmaTono, sonarAlarmaTono } from "../audio/sintetizador.js";
 import { pararVistaPrevia, sonarCancionEnBucle, sonarEmisoraEnBucle } from "../audio/reproductor.js";
 import { detenerVibracion, iniciarVibracion } from "./vibracion.js";
-import { establecerNecesidad } from "./vigilia.js";
+import { encenderPantallaNativa, establecerNecesidad } from "./vigilia.js";
 
 /** Clave con la que este módulo pide la vigilia; ver `vigilia.js`. */
 const RAZON_VIGILIA = "alarmas";
@@ -196,6 +196,7 @@ function avanzarCola() {
   if (actual || cola.length === 0) return;
 
   actual = cola.shift();
+  encenderPantallaNativa();
   mostrarOverlay(actual);
   iniciarRelojEnPantalla();
   if (actual.alarma.vibracion) iniciarVibracion();

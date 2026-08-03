@@ -133,14 +133,18 @@ function pluginAlarma() {
 }
 
 /**
- * Sin el permiso de «Alarmas y recordatorios» (Android 12+), AlarmManager no
- * deja programar una alarma exacta: la app seguiría funcionando, pero las
- * alarmas nunca sonarían con el móvil bloqueado o la aplicación cerrada, sin
- * ninguna pista de por qué. Este aviso solo se ve en la app nativa.
+ * Dos permisos, los dos con el mismo patrón en Android 12+/14+: hay que
+ * concederlos a mano en los ajustes del sistema, y sin ellos la app sigue
+ * funcionando pero las alarmas no suenan o no se muestran bien con el móvil
+ * bloqueado o la aplicación cerrada, sin ninguna pista de por qué. Solo se
+ * ve en la app nativa; se muestra el botón de cada uno que falte, y el
+ * aviso entero se oculta en cuanto no falta ninguno.
  */
 async function actualizarAvisoPermiso() {
   const nativo = pluginAlarma();
   const aviso = document.getElementById("aviso-permiso-alarma");
+  const btnAlarma = document.getElementById("btn-permiso-alarma");
+  const btnPantalla = document.getElementById("btn-permiso-pantalla");
   if (!aviso) return;
 
   if (!nativo) {
@@ -149,8 +153,14 @@ async function actualizarAvisoPermiso() {
   }
 
   try {
-    const { concedido } = await nativo.tienePermisoAlarmasExactas();
-    aviso.hidden = Boolean(concedido);
+    const [alarma, pantalla] = await Promise.all([
+      nativo.tienePermisoAlarmasExactas(),
+      nativo.tienePermisoPantallaCompleta(),
+    ]);
+
+    if (btnAlarma) btnAlarma.hidden = alarma.concedido;
+    if (btnPantalla) btnPantalla.hidden = pantalla.concedido;
+    aviso.hidden = alarma.concedido && pantalla.concedido;
   } catch {
     aviso.hidden = true;
   }
@@ -219,6 +229,11 @@ export function iniciarSonido() {
     // Los ajustes del sistema se abren por encima; al volver a esta pantalla
     // (vista:cambiada) se vuelve a comprobar solo, pero esto lo refresca ya
     // por si el usuario concede el permiso y no llega a salir de la app.
+    actualizarAvisoPermiso();
+  });
+
+  document.getElementById("btn-permiso-pantalla")?.addEventListener("click", async () => {
+    await pluginAlarma()?.solicitarPermisoPantallaCompleta();
     actualizarAvisoPermiso();
   });
 
