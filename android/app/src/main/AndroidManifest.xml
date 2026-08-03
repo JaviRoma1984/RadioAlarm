@@ -63,4 +63,9 @@
     <!-- El wake lock breve de AlarmReceiver y el largo de motor/vigilia.js. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Para que el sistema no mate la app de fondo antes de que llegue la
+         hora de una alarma. No cubre los ajustes propios de cada fabricante
+         (el "autoarranque" de ColorOS, por ejemplo): esto solo es la parte
+         de Android en sí. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 </manifest>

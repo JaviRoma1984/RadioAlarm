@@ -219,6 +219,42 @@ public class AlarmSchedulerPlugin extends Plugin {
     }
 
     /**
+     * El sistema puede matar la app en segundo plano —y con ella, cualquier
+     * proceso que quedara vivo— antes de que llegue la hora de una alarma,
+     * si no está eximida del ahorro de batería. A diferencia de los otros
+     * tres, esta petición muestra un diálogo directo del sistema, no una
+     * pantalla de ajustes para navegar.
+     *
+     * Esto es solo la parte "de Android en sí": los fabricantes con
+     * gestión de batería propia (ColorOS de Oppo, entre otros) pueden tener
+     * además su propio interruptor de "autoarranque" que esta llamada no
+     * toca —no hay ninguna API pública para eso—.
+     */
+    @PluginMethod
+    public void tieneExencionBateria(PluginCall call) {
+        JSObject resultado = new JSObject();
+        resultado.put("concedido", tieneExencionBateriaConcedida());
+        call.resolve(resultado);
+    }
+
+    @PluginMethod
+    public void solicitarExencionBateria(PluginCall call) {
+        if (!tieneExencionBateriaConcedida()) {
+            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+        }
+
+        call.resolve();
+    }
+
+    private boolean tieneExencionBateriaConcedida() {
+        PowerManager gestor = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+        return gestor != null && gestor.isIgnoringBatteryOptimizations(getContext().getPackageName());
+    }
+
+    /**
      * Si la app se ha abierto porque una notificación de alarma la lanzó
      * (pantalla bloqueada o app cerrada), devuelve el id de esa alarma y lo
      * consume: una llamada posterior ya no lo repite, así que al pasar a

@@ -133,18 +133,44 @@ function pluginAlarma() {
 }
 
 /**
- * Tres permisos que Android puede negar en silencio, cada uno con su
+ * Cuatro permisos que Android puede negar en silencio, cada uno con su
  * propio motivo por el que la alarma dejaría de sonar o de mostrarse bien
- * con el móvil bloqueado o la aplicación cerrada. Solo se ve en la app
- * nativa; se muestra el botón de cada uno que falte, y el aviso entero se
- * oculta en cuanto no falta ninguno.
+ * con el móvil bloqueado o la aplicación cerrada. En vez de un botón por
+ * permiso, hay uno solo: pide el primero que falte de esta lista, en este
+ * orden, y al volver de los ajustes del sistema (`vista:cambiada` o
+ * `visibilitychange`, ya conectados más abajo) se vuelve a comprobar sola
+ * y pide el siguiente que toque, sin que el usuario tenga que buscar nada.
  */
+const PERMISOS_NATIVOS = [
+  {
+    etiqueta: "Notificaciones",
+    tiene: (nativo) => nativo.tienePermisoNotificaciones(),
+    solicitar: (nativo) => nativo.solicitarPermisoNotificaciones(),
+  },
+  {
+    etiqueta: "Alarmas exactas",
+    tiene: (nativo) => nativo.tienePermisoAlarmasExactas(),
+    solicitar: (nativo) => nativo.solicitarPermisoAlarmasExactas(),
+  },
+  {
+    etiqueta: "Pantalla completa",
+    tiene: (nativo) => nativo.tienePermisoPantallaCompleta(),
+    solicitar: (nativo) => nativo.solicitarPermisoPantallaCompleta(),
+  },
+  {
+    etiqueta: "Ignorar la optimización de batería",
+    tiene: (nativo) => nativo.tieneExencionBateria(),
+    solicitar: (nativo) => nativo.solicitarExencionBateria(),
+  },
+];
+
+/** El permiso que el botón del aviso pediría ahora mismo, si se pulsa. */
+let permisoPendiente = null;
+
 async function actualizarAvisoPermiso() {
   const nativo = pluginAlarma();
   const aviso = document.getElementById("aviso-permiso-alarma");
-  const btnNotificaciones = document.getElementById("btn-permiso-notificaciones");
-  const btnAlarma = document.getElementById("btn-permiso-alarma");
-  const btnPantalla = document.getElementById("btn-permiso-pantalla");
+  const texto = document.getElementById("aviso-permiso-alarma-texto");
   if (!aviso) return;
 
   if (!nativo) {
@@ -152,20 +178,24 @@ async function actualizarAvisoPermiso() {
     return;
   }
 
-  try {
-    const [notificaciones, alarma, pantalla] = await Promise.all([
-      nativo.tienePermisoNotificaciones(),
-      nativo.tienePermisoAlarmasExactas(),
-      nativo.tienePermisoPantallaCompleta(),
-    ]);
-
-    if (btnNotificaciones) btnNotificaciones.hidden = notificaciones.concedido;
-    if (btnAlarma) btnAlarma.hidden = alarma.concedido;
-    if (btnPantalla) btnPantalla.hidden = pantalla.concedido;
-    aviso.hidden = notificaciones.concedido && alarma.concedido && pantalla.concedido;
-  } catch {
-    aviso.hidden = true;
+  for (const permiso of PERMISOS_NATIVOS) {
+    // Uno a uno y en orden, no en paralelo: en cuanto se encuentra el
+    // primero que falta ya no hace falta comprobar los siguientes.
+    const { concedido } = await permiso.tiene(nativo).catch(() => ({ concedido: true }));
+    if (!concedido) {
+      permisoPendiente = permiso;
+      aviso.hidden = false;
+      if (texto) {
+        texto.textContent =
+          `Falta: ${permiso.etiqueta}. Pulsa el botón y concede lo que te pida el ` +
+          "sistema; al volver aquí, se pedirá solo lo que siga faltando.";
+      }
+      return;
+    }
   }
+
+  permisoPendiente = null;
+  aviso.hidden = true;
 }
 
 /** Recarga el borrador desde lo guardado y repinta. Se llama al abrir la vista. */
@@ -226,24 +256,15 @@ export function iniciarSonido() {
   document.getElementById("btn-guardar-sonido")?.addEventListener("click", guardar);
   document.getElementById("btn-volver-sonido")?.addEventListener("click", volver);
 
-  document.getElementById("btn-permiso-notificaciones")?.addEventListener("click", async () => {
-    // Este, a diferencia de los otros dos, muestra el diálogo del propio
-    // sistema en vez de abrir sus ajustes: el resultado llega al momento,
-    // sin depender de "vista:cambiada" al volver de ningún lado.
-    await pluginAlarma()?.solicitarPermisoNotificaciones();
-    actualizarAvisoPermiso();
-  });
+  document.getElementById("btn-permiso-todos")?.addEventListener("click", async () => {
+    const nativo = pluginAlarma();
+    if (!nativo || !permisoPendiente) return;
 
-  document.getElementById("btn-permiso-alarma")?.addEventListener("click", async () => {
-    await pluginAlarma()?.solicitarPermisoAlarmasExactas();
-    // Los ajustes del sistema se abren por encima; al volver a esta pantalla
-    // (vista:cambiada) se vuelve a comprobar solo, pero esto lo refresca ya
-    // por si el usuario concede el permiso y no llega a salir de la app.
-    actualizarAvisoPermiso();
-  });
-
-  document.getElementById("btn-permiso-pantalla")?.addEventListener("click", async () => {
-    await pluginAlarma()?.solicitarPermisoPantallaCompleta();
+    await permisoPendiente.solicitar(nativo).catch(() => {});
+    // El de notificaciones resuelve al momento, con el diálogo del propio
+    // sistema; los demás abren una pantalla de ajustes por encima, y el
+    // resultado no llega hasta volver aquí —por "vista:cambiada" o
+    // "visibilitychange", más abajo—. Refrescar ya de paso no hace daño.
     actualizarAvisoPermiso();
   });
 
