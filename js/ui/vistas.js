@@ -21,6 +21,26 @@ export function vistaActual() {
 }
 
 /**
+ * En algunos navegadores móviles (confirmado en Brave para Android y en el
+ * WebView del envoltorio nativo; en Chrome para Android no pasa) revelar una
+ * vista con más contenido —el editor, sobre todo— puede recalcular el zoom y
+ * quedarse con una escala ampliada aunque el contenido ya quepa de sobra: se
+ * nota en que abre "ampliado" y hay que pellizcar a mano para verlo al 100%,
+ * como el resto de pantallas. Reescribir el `<meta viewport>` —a otro valor y
+ * de vuelta al suyo, para que se note el cambio aunque el texto final sea el
+ * mismo— fuerza a recalcularlo desde cero. Inofensivo donde no hace falta
+ * (Chrome, escritorio): es la misma cadena de antes y después.
+ */
+function reiniciarEscalaMovil() {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) return;
+
+  const original = meta.getAttribute("content");
+  meta.setAttribute("content", "width=device-width");
+  requestAnimationFrame(() => meta.setAttribute("content", original));
+}
+
+/**
  * Muestra una vista y oculta el resto.
  * @param {string} nombre Valor del atributo `data-vista` de la sección.
  * @param {object} [detalle] Datos extra para quien escuche `vista:cambiada`;
@@ -45,6 +65,7 @@ export function mostrarVista(nombre, detalle = {}) {
 
   actual = nombre;
   window.scrollTo({ top: 0 });
+  reiniciarEscalaMovil();
 
   // Cada vista se refresca al abrirse escuchando este evento, sin que este
   // módulo tenga que conocerlas.
