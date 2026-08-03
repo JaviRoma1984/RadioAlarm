@@ -387,6 +387,12 @@
 }
 
 .panel {
+  /* `.vista` es un grid: sin esto, un descendiente con una palabra suelta
+     que no puede partirse (p. ej. «Canción» en el segmentado) puede acabar
+     empujando la tarjeta entera —y con ella toda la columna— más ancha que
+     la pantalla. Ya pasó con la barra inferior y el segmentado por su
+     cuenta; esto lo evita también un nivel más arriba. */
+  min-width: 0;
   padding: var(--space-4);
   border-radius: var(--radius-lg);
   background-color: var(--surface);
@@ -787,6 +793,10 @@
 
 .segmentado {
   display: flex;
+  /* Último recurso: si ni encogiendo ni partiendo palabras cupieran los
+     tres a la vez (letra de sistema muy grande, pantalla muy angosta), que
+     el tercero baje a una segunda línea en vez de desbordar hacia fuera. */
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-bottom: var(--space-3);
 }
@@ -796,7 +806,12 @@
   /* Sin esto, `flex: 1` no encoge un segmento por debajo del ancho de su
      propio texto («Cuenta atrás», etc.): con los tres a la vez y el texto
      más grande, eso bastaba para desbordar la fila entera hacia la derecha. */
-  min-width: 0;
+  min-width: 6rem;
+  /* Ni siquiera una sola palabra («Canción», «Radio») debe poder marcar un
+     mínimo infranqueable: en un WebView que renderice el texto más grande
+     de lo esperado, eso era justo lo que empujaba toda la tarjeta fuera de
+     la pantalla. Con esto, si hace falta, la palabra se parte. */
+  overflow-wrap: anywhere;
   display: flex;
   align-items: center;
   justify-content: center;
