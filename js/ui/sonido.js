@@ -25,6 +25,8 @@ import { toast } from "./toast.js";
 import { volverAlInicio } from "./vistas.js";
 
 const CLAVE = "sonido";
+/** Marca local: si el usuario ya llegó a abrir la pantalla de autoarranque. */
+const CLAVE_AUTOARRANQUE_ABIERTO = "nativo.autoarranque-abierto";
 
 /**
  * Tonos visibles con la lista encogida. A cero: el apartado muestra solo la
@@ -162,6 +164,23 @@ const PERMISOS_NATIVOS = [
     tiene: (nativo) => nativo.tieneExencionBateria(),
     solicitar: (nativo) => nativo.solicitarExencionBateria(),
   },
+  {
+    etiqueta: "Autoarranque / actividad en segundo plano",
+    // No hay ninguna API de Android para comprobar esto —son pantallas
+    // propias de ColorOS, no del sistema—: se confía en que, si el usuario
+    // llegó a abrirla, la puso como toca. Por eso "tiene" no pregunta al
+    // plugin nativo, sino a esta marca local.
+    tiene: () => Promise.resolve({ concedido: Boolean(leer(CLAVE_AUTOARRANQUE_ABIERTO)) }),
+    solicitar: async (nativo) => {
+      await nativo.abrirAjustesAutoarranque();
+      escribir(CLAVE_AUTOARRANQUE_ABIERTO, true);
+    },
+    instruccion:
+      "No es un permiso de Android, sino un ajuste propio de tu fabricante (autoarranque " +
+      "o actividad en segundo plano): al pulsar el botón se abre esa pantalla —el nombre " +
+      "exacto varía—; búscalo y ponlo en «Permitir». Se da por hecho en cuanto se abre una vez.",
+    textoBoton: "Abrir ajuste",
+  },
 ];
 
 /** El permiso que el botón del aviso pediría ahora mismo, si se pulsa. */
@@ -171,6 +190,7 @@ async function actualizarAvisoPermiso() {
   const nativo = pluginAlarma();
   const aviso = document.getElementById("aviso-permiso-alarma");
   const texto = document.getElementById("aviso-permiso-alarma-texto");
+  const boton = document.getElementById("btn-permiso-todos");
   if (!aviso) return;
 
   if (!nativo) {
@@ -187,9 +207,11 @@ async function actualizarAvisoPermiso() {
       aviso.hidden = false;
       if (texto) {
         texto.textContent =
+          permiso.instruccion ??
           `Falta: ${permiso.etiqueta}. Pulsa el botón y concede lo que te pida el ` +
-          "sistema; al volver aquí, se pedirá solo lo que siga faltando.";
+            "sistema; al volver aquí, se pedirá solo lo que siga faltando.";
       }
+      if (boton) boton.textContent = permiso.textoBoton ?? "Conceder permiso";
       return;
     }
   }

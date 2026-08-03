@@ -255,6 +255,52 @@ public class AlarmSchedulerPlugin extends Plugin {
     }
 
     /**
+     * Pantallas de "autoarranque"/"actividad en segundo plano" propias de
+     * ColorOS (Oppo): no son API pública de Android, así que no hay ninguna
+     * forma de comprobar si ya están concedidas —a diferencia de los otros
+     * permisos, JS se limita a marcar este paso como hecho en cuanto se
+     * abre una vez, confiando en que el usuario lo puso—. El nombre exacto
+     * de la pantalla varía según la versión de ColorOS, así que se prueban
+     * varias por orden; si ninguna existe en este móvil en concreto, se cae
+     * a los ajustes generales de la app, donde el usuario puede buscarlo a
+     * mano.
+     */
+    @PluginMethod
+    public void abrirAjustesAutoarranque(PluginCall call) {
+        String[][] candidatos = {
+            { "com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity" },
+            { "com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity" },
+            { "com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity" },
+        };
+
+        for (String[] candidato : candidatos) {
+            try {
+                Intent intent = new Intent();
+                intent.setClassName(candidato[0], candidato[1]);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(intent);
+                call.resolve();
+                return;
+            } catch (Exception excepcion) {
+                // Esta variante no existe en esta versión de ColorOS: se
+                // prueba la siguiente antes de caer al último recurso.
+            }
+        }
+
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+        } catch (Exception excepcion) {
+            call.reject("No se ha podido abrir ningún ajuste", excepcion);
+            return;
+        }
+
+        call.resolve();
+    }
+
+    /**
      * Si la app se ha abierto porque una notificación de alarma la lanzó
      * (pantalla bloqueada o app cerrada), devuelve el id de esa alarma y lo
      * consume: una llamada posterior ya no lo repite, así que al pasar a
