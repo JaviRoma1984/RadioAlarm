@@ -10,8 +10,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Base64;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Date;
 
 import com.getcapacitor.JSArray;
@@ -48,6 +51,14 @@ public class AlarmSchedulerPlugin extends Plugin {
     /** Mismo tag en todo el código nativo, para filtrar en un solo sitio con adb logcat. */
     private static final String TAG = "RadioAlarm";
 
+    /**
+     * `tipoSonido`/`tono`/`cancionId`/`emisoraUrl` van directos como extras
+     * del `PendingIntent` de disparo (ver `crearPendingIntentDisparo`): así
+     * `AlarmService` ya sabe qué reproducir sin depender de que la WebView
+     * esté viva para preguntárselo al JS en ese momento. Si la fuente es una
+     * canción, el archivo tiene que estar ya exportado con
+     * `guardarAudioCancion` antes de llamar aquí —lo hace `js/nativo.js`—.
+     */
     @PluginMethod
     public void programar(PluginCall call) {
         String id = call.getString("id");
@@ -64,16 +75,67 @@ public class AlarmSchedulerPlugin extends Plugin {
             return;
         }
 
-        AlarmManager.AlarmClockInfo info = new AlarmManager.AlarmClockInfo(cuando, crearPendingIntentMostrar());
-        gestor.setAlarmClock(info, crearPendingIntentDisparo(id));
+        String tipoSonido = call.getString("tipoSonido", "tono");
+        String tono = call.getString("tono");
+        String cancionId = call.getString("cancionId");
+        String emisoraUrl = call.getString("emisoraUrl");
 
-        String mensaje = "programar id=" + id + " cuando=" + new Date(cuando)
+        AlarmManager.AlarmClockInfo info = new AlarmManager.AlarmClockInfo(cuando, crearPendingIntentMostrar());
+        gestor.setAlarmClock(info, crearPendingIntentDisparo(id, tipoSonido, tono, cancionId, emisoraUrl));
+
+        String mensaje = "programar id=" + id + " cuando=" + new Date(cuando) + " tipo=" + tipoSonido
             + " (alarmas exactas=" + puedeProgramarExactas()
             + ", exención batería=" + tieneExencionBateriaConcedida()
             + ", pantalla completa=" + puedeUsarPantallaCompleta() + ")";
         Log.i(TAG, mensaje);
         Registro.agregar(getContext(), mensaje);
 
+        call.resolve();
+    }
+
+    /**
+     * Copia el audio de una canción elegida como alarma a almacenamiento
+     * interno, para que `AlarmService` la pueda reproducir sin la WebView
+     * (el archivo original vive en el IndexedDB de la propia WebView, no
+     * accesible desde Java). `js/nativo.js` llama a esto una vez por cada
+     * canción antes de programarla como alarma.
+     */
+    @PluginMethod
+    public void guardarAudioCancion(PluginCall call) {
+        String id = call.getString("id");
+        String base64 = call.getString("base64");
+
+        if (id == null || base64 == null) {
+            call.reject("Faltan datos: se necesitan \"id\" y \"base64\"");
+            return;
+        }
+
+        try {
+            byte[] datos = Base64.decode(base64, Base64.DEFAULT);
+            File carpeta = new File(getContext().getFilesDir(), "canciones");
+            carpeta.mkdirs();
+
+            try (FileOutputStream salida = new FileOutputStream(new File(carpeta, id))) {
+                salida.write(datos);
+            }
+
+            call.resolve();
+        } catch (Exception excepcion) {
+            call.reject("No se pudo guardar el audio de la canción", excepcion);
+        }
+    }
+
+    /**
+     * La llama el JS en cuanto decide sonar por su cuenta —tanto si la
+     * alarma la había lanzado la notificación nativa como si el propio
+     * motor JS la detectó con la app abierta—, para que `AlarmService` no
+     * siga sonando en paralelo.
+     */
+    @PluginMethod
+    public void detenerSonidoNativo(PluginCall call) {
+        Intent intent = new Intent(getContext(), AlarmService.class);
+        intent.setAction(AlarmService.ACCION_DETENER);
+        getContext().startService(intent);
         call.resolve();
     }
 
@@ -389,10 +451,22 @@ public class AlarmSchedulerPlugin extends Plugin {
         return (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
     }
 
-    /** El broadcast que AlarmManager dispara a la hora programada. */
-    private PendingIntent crearPendingIntentDisparo(String id) {
+    /**
+     * El broadcast que AlarmManager dispara a la hora programada.
+     *
+     * Los datos de sonido son opcionales (`null` al cancelar, donde no hace
+     * falta): `AlarmManager.cancel(PendingIntent)` compara por componente y
+     * código de solicitud, no por los extras del `Intent`, así que un
+     * `PendingIntent` "vacío" con el mismo id cancela igual el que se
+     * programó con los datos completos.
+     */
+    private PendingIntent crearPendingIntentDisparo(String id, String tipoSonido, String tono, String cancionId, String emisoraUrl) {
         Intent intent = new Intent(getContext(), AlarmReceiver.class);
         intent.putExtra("idAlarma", id);
+        if (tipoSonido != null) intent.putExtra("tipoSonido", tipoSonido);
+        if (tono != null) intent.putExtra("tono", tono);
+        if (cancionId != null) intent.putExtra("cancionId", cancionId);
+        if (emisoraUrl != null) intent.putExtra("emisoraUrl", emisoraUrl);
 
         return PendingIntent.getBroadcast(
             getContext(),
@@ -400,6 +474,10 @@ public class AlarmSchedulerPlugin extends Plugin {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
+    }
+
+    private PendingIntent crearPendingIntentDisparo(String id) {
+        return crearPendingIntentDisparo(id, null, null, null, null);
     }
 
     /**

@@ -39,6 +39,20 @@ export function encenderPantallaNativa() {
   window.Capacitor?.Plugins?.AlarmScheduler?.encenderPantalla().catch(() => {});
 }
 
+/**
+ * Avisa a `AlarmService` (envoltorio Android, ver ese archivo) de que el JS
+ * ha decidido sonar por su cuenta, para que pare su propia reproducción
+ * nativa y no se solapen dos sonidos a la vez.
+ *
+ * Se llama siempre que una alarma empieza a sonar en JS —tanto si la trajo
+ * al frente una notificación nativa como si el motor la detectó con la app
+ * ya abierta—: si `AlarmService` no estaba sonando nada, esto no hace nada
+ * perceptible.
+ */
+export function detenerSonidoNativo() {
+  window.Capacitor?.Plugins?.AlarmScheduler?.detenerSonidoNativo().catch(() => {});
+}
+
 let bloqueo = null;
 
 /** Claves de quien la necesita ahora mismo: `"alarmas"`, `"crono"`, `"cuenta-atras"`… */

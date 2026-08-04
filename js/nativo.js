@@ -15,25 +15,69 @@
  * `motor/motor.js`'s `activarAlarmaNativa`.
  */
 
-import { proximoDisparo } from "./model/alarma.js";
+import { FUENTE, proximoDisparo } from "./model/alarma.js";
 import { alCambiar, listarAlarmas } from "./model/alarmas.js";
 import { activarAlarmaNativa } from "./motor/motor.js";
+import { obtenerAudio } from "./store/audioBlobs.js";
 import { leer, escribir } from "./store.js";
 
 /** Ids que este módulo tenía programados en AlarmManager la última vez. */
 const CLAVE_PROGRAMADAS = "nativo.programadas";
+/** Ids de canción ya copiados a almacenamiento nativo; ver `asegurarCancionExportada`. */
+const CLAVE_AUDIOS_EXPORTADOS = "nativo.audios-exportados";
 
 function obtenerPlugin() {
   return window.Capacitor?.Plugins?.AlarmScheduler ?? null;
 }
 
 /**
+ * Convierte un Blob a base64 en trozos, para no reventar la pila de
+ * `String.fromCharCode` con un archivo de varios megabytes de golpe.
+ */
+async function blobABase64(blob) {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const TAMANO_TROZO = 0x8000;
+  let binario = "";
+
+  for (let i = 0; i < bytes.length; i += TAMANO_TROZO) {
+    binario += String.fromCharCode.apply(null, bytes.subarray(i, i + TAMANO_TROZO));
+  }
+
+  return btoa(binario);
+}
+
+/**
+ * Copia el audio de una canción elegida como alarma a almacenamiento nativo,
+ * una sola vez por id: el audio real vive en el IndexedDB de la propia
+ * WebView (`store/audioBlobs.js`), al que `AlarmService` no tiene acceso
+ * cuando la app está cerrada. Sin esta copia, una alarma de canción sonando
+ * sin la app abierta no tendría ningún archivo que reproducir.
+ */
+async function asegurarCancionExportada(nativo, cancionId) {
+  const exportados = new Set(leer(CLAVE_AUDIOS_EXPORTADOS) ?? []);
+  if (exportados.has(cancionId)) return;
+
+  const audio = await obtenerAudio(cancionId);
+  if (!audio) return;
+
+  try {
+    const base64 = await blobABase64(audio.blob);
+    await nativo.guardarAudioCancion({ id: cancionId, base64 });
+    exportados.add(cancionId);
+    escribir(CLAVE_AUDIOS_EXPORTADOS, [...exportados]);
+  } catch {
+    // No se marca como exportada: se reintentará en la próxima resincronización.
+  }
+}
+
+/**
  * Recalcula qué alarmas nativas deberían estar programadas ahora mismo y
  * reprograma solo la diferencia con la última vez: se cancelan las que ya
  * no deben sonar (desactivadas, borradas, sin próximo disparo) y se
- * programan o actualizan las demás.
+ * programan o actualizan las demás, con los datos de sonido que
+ * `AlarmService` necesita para reproducir la alarma sin la app abierta.
  */
-function resincronizar() {
+async function resincronizar() {
   const nativo = obtenerPlugin();
   if (!nativo) return;
 
@@ -44,7 +88,7 @@ function resincronizar() {
     if (!alarma.activa) continue;
 
     const disparo = proximoDisparo(alarma, ahora);
-    if (disparo) objetivo.set(alarma.id, disparo.getTime());
+    if (disparo) objetivo.set(alarma.id, { cuando: disparo.getTime(), sonido: alarma.sonido });
   }
 
   const previas = leer(CLAVE_PROGRAMADAS) ?? [];
@@ -52,8 +96,21 @@ function resincronizar() {
     if (!objetivo.has(id)) nativo.cancelar({ id }).catch(() => {});
   }
 
-  for (const [id, cuando] of objetivo) {
-    nativo.programar({ id, cuando }).catch(() => {});
+  for (const [id, { cuando, sonido }] of objetivo) {
+    if (sonido.tipo === FUENTE.CANCION && sonido.cancion) {
+      await asegurarCancionExportada(nativo, sonido.cancion.id);
+    }
+
+    nativo
+      .programar({
+        id,
+        cuando,
+        tipoSonido: sonido.tipo,
+        tono: sonido.tono,
+        cancionId: sonido.cancion?.id ?? null,
+        emisoraUrl: sonido.emisora?.url ?? null,
+      })
+      .catch(() => {});
   }
 
   escribir(CLAVE_PROGRAMADAS, [...objetivo.keys()]);

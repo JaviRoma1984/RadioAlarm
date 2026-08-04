@@ -43,7 +43,9 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         try {
             Intent intentServicio = new Intent(context, AlarmService.class);
-            intentServicio.putExtra(EXTRA_ID_ALARMA, idAlarma);
+            // Además de idAlarma: tipoSonido/tono/cancionId/emisoraUrl, tal
+            // cual los puso AlarmSchedulerPlugin al programar.
+            if (intent.getExtras() != null) intentServicio.putExtras(intent.getExtras());
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intentServicio);

@@ -48,14 +48,16 @@
             </intent-filter>
         </receiver>
 
-        <!-- Lo arranca AlarmReceiver; ver AlarmService.java. "shortService" es
-             el tipo pensado para exactamente esto (Android 14+): una tarea
-             breve y puntual, sin encajar en categorías como "mediaPlayback"
-             o "location" que no describen lo que hace en realidad. -->
+        <!-- Lo arranca AlarmReceiver; ver AlarmService.java. Reproduce el
+             sonido de la alarma él mismo (tono/canción/radio), así que
+             "mediaPlayback" es el tipo correcto —a diferencia de
+             "shortService", que Android limita a unos 3 minutos de vida,
+             insuficiente para una alarma que puede sonar mucho más si nadie
+             la para—. -->
         <service
             android:name=".AlarmService"
             android:exported="false"
-            android:foregroundServiceType="shortService" />
+            android:foregroundServiceType="mediaPlayback" />
     </application>
 
     <!-- Permissions -->
@@ -79,5 +81,5 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- El servicio en primer plano de AlarmService, y su tipo concreto. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 </manifest>
