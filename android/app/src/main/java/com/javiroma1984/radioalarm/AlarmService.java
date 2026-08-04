@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -58,7 +59,8 @@ public class AlarmService extends Service {
         String idAlarma = intent != null ? intent.getStringExtra(EXTRA_ID_ALARMA) : null;
         int idNotificacion = idAlarma != null ? idAlarma.hashCode() : 0;
         Log.i(TAG, "AlarmService.onStartCommand id=" + idAlarma);
-        Registro.agregar(this, "AlarmService.onStartCommand id=" + idAlarma);
+        Registro.agregar(this, "AlarmService.onStartCommand id=" + idAlarma
+            + " (exención batería=" + tieneExencionBateria() + ", pantalla completa=" + tienePantallaCompleta() + ")");
 
         crearCanalNotificacion();
 
@@ -112,6 +114,25 @@ public class AlarmService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    /**
+     * Registrados en cada disparo, no solo al pedirlos: si ColorOS revoca
+     * alguno de estos dos por su cuenta después de la primera alarma —algo
+     * que hacen algunos fabricantes como "autoprotección" tras detectar
+     * actividad en segundo plano—, se verá comparando el primer disparo con
+     * los siguientes sin depender de que el usuario vuelva a mirar los
+     * ajustes a mano.
+     */
+    private boolean tieneExencionBateria() {
+        PowerManager gestor = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        return gestor != null && gestor.isIgnoringBatteryOptimizations(getPackageName());
+    }
+
+    private boolean tienePantallaCompleta() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return true;
+        NotificationManager gestor = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        return gestor != null && gestor.canUseFullScreenIntent();
     }
 
     private Intent crearIntentAbrir(String idAlarma) {

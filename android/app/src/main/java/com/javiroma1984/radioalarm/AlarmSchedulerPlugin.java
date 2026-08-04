@@ -68,7 +68,9 @@ public class AlarmSchedulerPlugin extends Plugin {
         gestor.setAlarmClock(info, crearPendingIntentDisparo(id));
 
         String mensaje = "programar id=" + id + " cuando=" + new Date(cuando)
-            + " (permiso alarmas exactas=" + puedeProgramarExactas() + ")";
+            + " (alarmas exactas=" + puedeProgramarExactas()
+            + ", exención batería=" + tieneExencionBateriaConcedida()
+            + ", pantalla completa=" + puedeUsarPantallaCompleta() + ")";
         Log.i(TAG, mensaje);
         Registro.agregar(getContext(), mensaje);
 
