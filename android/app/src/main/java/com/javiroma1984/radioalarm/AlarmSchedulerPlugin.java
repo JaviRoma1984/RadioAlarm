@@ -79,9 +79,10 @@ public class AlarmSchedulerPlugin extends Plugin {
         String tono = call.getString("tono");
         String cancionId = call.getString("cancionId");
         String emisoraUrl = call.getString("emisoraUrl");
+        boolean ascendente = call.getBoolean("ascendente", true);
 
         AlarmManager.AlarmClockInfo info = new AlarmManager.AlarmClockInfo(cuando, crearPendingIntentMostrar());
-        gestor.setAlarmClock(info, crearPendingIntentDisparo(id, tipoSonido, tono, cancionId, emisoraUrl));
+        gestor.setAlarmClock(info, crearPendingIntentDisparo(id, tipoSonido, tono, cancionId, emisoraUrl, ascendente));
 
         String mensaje = "programar id=" + id + " cuando=" + new Date(cuando) + " tipo=" + tipoSonido
             + " (alarmas exactas=" + puedeProgramarExactas()
@@ -460,13 +461,16 @@ public class AlarmSchedulerPlugin extends Plugin {
      * `PendingIntent` "vacío" con el mismo id cancela igual el que se
      * programó con los datos completos.
      */
-    private PendingIntent crearPendingIntentDisparo(String id, String tipoSonido, String tono, String cancionId, String emisoraUrl) {
+    private PendingIntent crearPendingIntentDisparo(
+        String id, String tipoSonido, String tono, String cancionId, String emisoraUrl, boolean ascendente
+    ) {
         Intent intent = new Intent(getContext(), AlarmReceiver.class);
         intent.putExtra("idAlarma", id);
         if (tipoSonido != null) intent.putExtra("tipoSonido", tipoSonido);
         if (tono != null) intent.putExtra("tono", tono);
         if (cancionId != null) intent.putExtra("cancionId", cancionId);
         if (emisoraUrl != null) intent.putExtra("emisoraUrl", emisoraUrl);
+        intent.putExtra("ascendente", ascendente);
 
         return PendingIntent.getBroadcast(
             getContext(),
@@ -477,7 +481,7 @@ public class AlarmSchedulerPlugin extends Plugin {
     }
 
     private PendingIntent crearPendingIntentDisparo(String id) {
-        return crearPendingIntentDisparo(id, null, null, null, null);
+        return crearPendingIntentDisparo(id, null, null, null, null, true);
     }
 
     /**

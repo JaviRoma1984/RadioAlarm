@@ -354,8 +354,14 @@ export function sonarAlarmaTono(id, { rampaMs = 20000 } = {}) {
 
   const ahora = contexto.currentTime;
   maestro.gain.cancelScheduledValues(ahora);
-  maestro.gain.setValueAtTime(VOLUMEN_INICIAL_ALARMA, ahora);
-  maestro.gain.linearRampToValueAtTime(VOLUMEN_MAESTRO, ahora + rampaMs / 1000);
+
+  // `rampaMs <= 0`: sin rampa, a todo volumen desde el principio.
+  if (rampaMs <= 0) {
+    maestro.gain.setValueAtTime(VOLUMEN_MAESTRO, ahora);
+  } else {
+    maestro.gain.setValueAtTime(VOLUMEN_INICIAL_ALARMA, ahora);
+    maestro.gain.linearRampToValueAtTime(VOLUMEN_MAESTRO, ahora + rampaMs / 1000);
+  }
 
   const ciclo = () => {
     const duracion = patron(contexto.currentTime + 0.02);

@@ -17,6 +17,7 @@
 
 import { FUENTE, proximoDisparo } from "./model/alarma.js";
 import { alCambiar, listarAlarmas } from "./model/alarmas.js";
+import { configuracionSonido } from "./model/configuracionSonido.js";
 import { activarAlarmaNativa } from "./motor/motor.js";
 import { obtenerAudio } from "./store/audioBlobs.js";
 import { leer, escribir } from "./store.js";
@@ -96,6 +97,8 @@ async function resincronizar() {
     if (!objetivo.has(id)) nativo.cancelar({ id }).catch(() => {});
   }
 
+  const { ascendente } = configuracionSonido();
+
   for (const [id, { cuando, sonido }] of objetivo) {
     if (sonido.tipo === FUENTE.CANCION && sonido.cancion) {
       await asegurarCancionExportada(nativo, sonido.cancion.id);
@@ -109,6 +112,7 @@ async function resincronizar() {
         tono: sonido.tono,
         cancionId: sonido.cancion?.id ?? null,
         emisoraUrl: sonido.emisora?.url ?? null,
+        ascendente,
       })
       .catch(() => {});
   }

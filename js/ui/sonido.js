@@ -15,7 +15,8 @@
  * probar antes de guardarla.
  */
 
-import { TONO_POR_DEFECTO, existeTono, nombreTono } from "../datos/tonos.js";
+import { nombreTono } from "../datos/tonos.js";
+import { configuracionSonido, guardarConfiguracionSonido, POR_DEFECTO_SONIDO } from "../model/configuracionSonido.js";
 import { leer, escribir } from "../store.js";
 import { crearPlegable } from "./plegable.js";
 import { crearSelectorCancion } from "./selectorCancion.js";
@@ -24,7 +25,8 @@ import { crearSelectorTono } from "./selectorTono.js";
 import { toast } from "./toast.js";
 import { volverAlInicio } from "./vistas.js";
 
-const CLAVE = "sonido";
+export { configuracionSonido };
+
 /** Marca local: si el usuario ya llegó a abrir la pantalla de autoarranque. */
 const CLAVE_AUTOARRANQUE_ABIERTO = "nativo.autoarranque-abierto";
 
@@ -34,28 +36,8 @@ const CLAVE_AUTOARRANQUE_ABIERTO = "nativo.autoarranque-abierto";
  */
 const TONOS_VISIBLES = 0;
 
-const POR_DEFECTO = {
-  tono: TONO_POR_DEFECTO,
-  cancion: null, // { nombre, id }
-  emisora: null, // { nombre, url }
-};
-
-/** Configuración de sonido guardada, completada con los valores por defecto. */
-export function configuracionSonido() {
-  const configuracion = { ...POR_DEFECTO, ...(leer(CLAVE) ?? {}) };
-
-  // Siempre tiene que haber un tono válido seleccionado. Si lo guardado apunta
-  // a un tono que ya no existe (catálogo cambiado, dato manipulado), se vuelve
-  // al de fábrica en lugar de quedarse sin ninguno marcado.
-  if (!existeTono(configuracion.tono)) {
-    configuracion.tono = TONO_POR_DEFECTO;
-  }
-
-  return configuracion;
-}
-
 /** Borrador en edición: copia de lo guardado hasta que se pulse «Guardar». */
-let borrador = { ...POR_DEFECTO };
+let borrador = { ...POR_DEFECTO_SONIDO };
 let hayCambios = false;
 
 /* -------------------------------------------------------------------------- */
@@ -118,6 +100,15 @@ function pintarTonos() {
 function pintarRecursos() {
   const tono = document.getElementById("valor-tono");
   if (tono) tono.textContent = nombreTono(borrador.tono);
+}
+
+function pintarVolumen() {
+  const valor = borrador.ascendente ? "ascendente" : "normal";
+  document
+    .querySelectorAll('#sonido-volumen input[name="sonido-volumen"]')
+    .forEach((radio) => {
+      radio.checked = radio.value === valor;
+    });
 }
 
 /** Activa el botón de guardar en cuanto hay algo que guardar. */
@@ -253,6 +244,7 @@ export function refrescarSonido() {
   marcarCambios(false);
   pintarTonos();
   pintarRecursos();
+  pintarVolumen();
   selectorCancion.pintar();
   selectorEmisora.pintar();
   actualizarAvisoPermiso();
@@ -279,7 +271,7 @@ function guardar() {
     return;
   }
 
-  if (escribir(CLAVE, borrador)) {
+  if (guardarConfiguracionSonido(borrador)) {
     marcarCambios(false);
     toast(`Guardado · tono ${nombreTono(borrador.tono)}`);
     volverAlInicio();
@@ -305,6 +297,13 @@ export function iniciarSonido() {
 
   document.getElementById("btn-guardar-sonido")?.addEventListener("click", guardar);
   document.getElementById("btn-volver-sonido")?.addEventListener("click", volver);
+
+  document.querySelectorAll('#sonido-volumen input[name="sonido-volumen"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      borrador.ascendente = radio.value === "ascendente";
+      marcarCambios();
+    });
+  });
 
   document.getElementById("btn-permiso-todos")?.addEventListener("click", async () => {
     const nativo = pluginAlarma();

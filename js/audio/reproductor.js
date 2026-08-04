@@ -56,9 +56,17 @@ function quitarManejadorError() {
  * Sube el volumen del elemento de `VOLUMEN_INICIAL_ALARMA` a 1 en `rampaMs`
  * milisegundos. `<audio>` no tiene un equivalente a las rampas de Web Audio,
  * así que se hace a pasos con un intervalo.
+ *
+ * `rampaMs <= 0` significa "sin rampa": a todo volumen desde el principio,
+ * para quien prefiera la alarma normal en vez de la ascendente.
  */
 function iniciarRampa(audio, rampaMs) {
   pararRampa();
+
+  if (rampaMs <= 0) {
+    audio.volume = 1;
+    return;
+  }
 
   const pasos = Math.max(1, Math.round(rampaMs / PASO_RAMPA_MS));
   const incremento = (1 - VOLUMEN_INICIAL_ALARMA) / pasos;

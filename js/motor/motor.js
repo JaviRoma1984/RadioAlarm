@@ -24,6 +24,7 @@
 
 import { FUENTE, REPETICION, alarmasQueDebenSonar } from "../model/alarma.js";
 import { alCambiar, listarAlarmas, marcarComoSonada, obtenerAlarma, proximaAlarma } from "../model/alarmas.js";
+import { configuracionSonido } from "../model/configuracionSonido.js";
 import { obtenerAudio } from "../store/audioBlobs.js";
 import { pararAlarmaTono, sonarAlarmaTono } from "../audio/sintetizador.js";
 import { pararVistaPrevia, sonarCancionEnBucle, sonarEmisoraEnBucle } from "../audio/reproductor.js";
@@ -66,17 +67,19 @@ let elementoConFocoPrevio = null;
  */
 async function iniciarSonido(alarma) {
   const { tipo, tono, cancion, emisora } = alarma.sonido;
+  // `0`: sin rampa, a todo volumen desde el principio; ver `configuracionSonido`.
+  const rampaMs = configuracionSonido().ascendente ? RAMPA_MS : 0;
 
   const usarTono = () => {
     pararVistaPrevia();
-    sonarAlarmaTono(tono, { rampaMs: RAMPA_MS });
+    sonarAlarmaTono(tono, { rampaMs });
   };
 
   if (tipo === FUENTE.CANCION && cancion) {
     const audio = await obtenerAudio(cancion.id);
     if (audio) {
       try {
-        await sonarCancionEnBucle(audio.blob, { rampaMs: RAMPA_MS, onError: usarTono });
+        await sonarCancionEnBucle(audio.blob, { rampaMs, onError: usarTono });
         return;
       } catch {
         // El archivo ya no se puede reproducir (dato corrupto, formato no
@@ -89,7 +92,7 @@ async function iniciarSonido(alarma) {
 
   if (tipo === FUENTE.RADIO && emisora) {
     try {
-      await sonarEmisoraEnBucle(emisora.url, { rampaMs: RAMPA_MS, onError: usarTono });
+      await sonarEmisoraEnBucle(emisora.url, { rampaMs, onError: usarTono });
       return;
     } catch {
       usarTono();

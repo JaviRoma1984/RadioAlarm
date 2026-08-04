@@ -56,6 +56,7 @@ public class AlarmService extends Service {
     private static final String EXTRA_TONO = "tono";
     private static final String EXTRA_CANCION_ID = "cancionId";
     private static final String EXTRA_EMISORA_URL = "emisoraUrl";
+    private static final String EXTRA_ASCENDENTE = "ascendente";
     static final String ACCION_DETENER = "com.javiroma1984.radioalarm.DETENER_SONIDO";
 
     /** Igual que RAMPA_MS en motor.js: cuánto tarda el sonido en llegar al volumen normal. */
@@ -95,8 +96,11 @@ public class AlarmService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACCION_DETENER.equals(intent.getAction())) {
-            Log.i(TAG, "AlarmService: detenido desde JS, que toma el control del sonido");
-            Registro.agregar(this, "AlarmService: detenido desde JS, que toma el control del sonido");
+            // Llega tanto del botón «Descartar» de la notificación como de
+            // detenerSonidoNativo() (el JS tomando el control): en los dos
+            // casos, parar es lo único que hace falta.
+            Log.i(TAG, "AlarmService: detenido (botón Descartar o JS)");
+            Registro.agregar(this, "AlarmService: detenido (botón Descartar o JS)");
             detenerReproduccion();
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
@@ -108,6 +112,7 @@ public class AlarmService extends Service {
         String tono = intent != null ? intent.getStringExtra(EXTRA_TONO) : null;
         String cancionId = intent != null ? intent.getStringExtra(EXTRA_CANCION_ID) : null;
         String emisoraUrl = intent != null ? intent.getStringExtra(EXTRA_EMISORA_URL) : null;
+        boolean ascendente = intent == null || intent.getBooleanExtra(EXTRA_ASCENDENTE, true);
         int idNotificacion = idAlarma != null ? idAlarma.hashCode() : 0;
 
         Log.i(TAG, "AlarmService.onStartCommand id=" + idAlarma + " tipo=" + tipo);
@@ -126,7 +131,13 @@ public class AlarmService extends Service {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(pendingAbrir, true)
             .setContentIntent(pendingAbrir)
-            .setOngoing(true);
+            .setOngoing(true)
+            // Para poder parar la alarma con un toque aunque la actividad no
+            // llegue a abrirse sola —lo que en la práctica pasa a menudo con
+            // la app cerrada, sobre todo en ColorOS—: sin esto, la única
+            // forma de silenciarla sería que la pantalla de la app se
+            // abriera por su cuenta.
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Descartar", crearPendingIntentDescartar(idNotificacion));
 
         try {
             // Todo servicio en primer plano necesita publicar su
@@ -153,7 +164,7 @@ public class AlarmService extends Service {
             Registro.agregar(this, "AlarmService: startActivity FALLÓ: " + excepcion);
         }
 
-        iniciarReproduccion(tipo, tono, cancionId, emisoraUrl);
+        iniciarReproduccion(tipo, tono, cancionId, emisoraUrl, ascendente);
 
         return START_NOT_STICKY;
     }
@@ -179,7 +190,7 @@ public class AlarmService extends Service {
      * mismo respaldo al tono que `motor.js`: si la canción ya no está
      * exportada o la emisora no carga, cae al tono en vez de quedarse muda.
      */
-    private void iniciarReproduccion(String tipo, String tono, String cancionId, String emisoraUrl) {
+    private void iniciarReproduccion(String tipo, String tono, String cancionId, String emisoraUrl, boolean ascendente) {
         detenerReproduccion();
 
         mediaPlayer = new MediaPlayer();
@@ -218,12 +229,14 @@ public class AlarmService extends Service {
             }
         }
 
-        final float volumenInicioFinal = volumenInicio;
+        // Sin rampa (`ascendente=false`): a todo volumen desde ya, sin pasar
+        // por el volumen inicial bajo del modo ascendente.
+        final float volumenInicioFinal = ascendente ? volumenInicio : 1f;
         mediaPlayer.setLooping(bucle);
-        mediaPlayer.setVolume(volumenInicio, volumenInicio);
+        mediaPlayer.setVolume(volumenInicioFinal, volumenInicioFinal);
         mediaPlayer.setOnPreparedListener(mp -> {
             mp.start();
-            iniciarRampa(volumenInicioFinal);
+            if (ascendente) iniciarRampa(volumenInicioFinal);
             Registro.agregar(this, "AlarmService: reproducción en marcha");
         });
         mediaPlayer.setOnErrorListener((mp, what, extra) -> {
@@ -316,6 +329,19 @@ public class AlarmService extends Service {
             this,
             codigoSolicitud,
             crearIntentAbrir(idAlarma),
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+    }
+
+    /** El botón «Descartar» de la notificación: reutiliza ACCION_DETENER tal cual. */
+    private PendingIntent crearPendingIntentDescartar(int codigoSolicitud) {
+        Intent intent = new Intent(this, AlarmService.class);
+        intent.setAction(ACCION_DETENER);
+
+        return PendingIntent.getService(
+            this,
+            codigoSolicitud,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
     }
