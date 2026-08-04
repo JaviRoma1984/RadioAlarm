@@ -220,6 +220,33 @@ async function actualizarAvisoPermiso() {
   aviso.hidden = true;
 }
 
+/**
+ * Registro de la última alarma nativa, paso a paso. Solo en la app de
+ * Android: es una herramienta de depuración para ver dónde se rompe la
+ * cadena cuando una alarma no suena con la app cerrada, sin tener que
+ * conectar el móvil a un ordenador.
+ */
+async function actualizarDiagnostico() {
+  const nativo = pluginAlarma();
+  const panel = document.getElementById("panel-diagnostico");
+  const texto = document.getElementById("diagnostico-texto");
+  if (!panel) return;
+
+  if (!nativo) {
+    panel.hidden = true;
+    return;
+  }
+
+  panel.hidden = false;
+
+  try {
+    const { texto: contenido } = await nativo.leerRegistro();
+    if (texto) texto.textContent = contenido;
+  } catch {
+    if (texto) texto.textContent = "(no se pudo leer el registro)";
+  }
+}
+
 /** Recarga el borrador desde lo guardado y repinta. Se llama al abrir la vista. */
 export function refrescarSonido() {
   borrador = configuracionSonido();
@@ -229,6 +256,7 @@ export function refrescarSonido() {
   selectorCancion.pintar();
   selectorEmisora.pintar();
   actualizarAvisoPermiso();
+  actualizarDiagnostico();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -290,6 +318,13 @@ export function iniciarSonido() {
     actualizarAvisoPermiso();
   });
 
+  document.getElementById("btn-diagnostico-actualizar")?.addEventListener("click", actualizarDiagnostico);
+
+  document.getElementById("btn-diagnostico-borrar")?.addEventListener("click", async () => {
+    await pluginAlarma()?.borrarRegistro().catch(() => {});
+    actualizarDiagnostico();
+  });
+
   // Al abrir la vista se descarta cualquier borrador anterior; al salir de ella
   // se corta cualquier tono de muestra que siguiera sonando.
   document.addEventListener("vista:cambiada", (evento) => {
@@ -299,7 +334,12 @@ export function iniciarSonido() {
 
   // Concedido el permiso desde los ajustes del sistema (fuera de la app), al
   // volver a ella conviene refrescar el aviso sin esperar a cambiar de vista.
+  // También sirve para ver el registro recién actualizado si la alarma
+  // acaba de sonar mientras la app estaba en segundo plano.
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") actualizarAvisoPermiso();
+    if (document.visibilityState === "visible") {
+      actualizarAvisoPermiso();
+      actualizarDiagnostico();
+    }
   });
 }

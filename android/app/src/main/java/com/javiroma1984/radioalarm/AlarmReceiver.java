@@ -30,6 +30,7 @@ public class AlarmReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String idAlarma = intent.getStringExtra(EXTRA_ID_ALARMA);
         Log.i(TAG, "AlarmReceiver.onReceive id=" + idAlarma);
+        Registro.agregar(context, "AlarmReceiver.onReceive id=" + idAlarma);
 
         // Wake lock breve: solo para cubrir el hueco entre que llega el
         // broadcast y el servicio llega a publicar su propia notificación
@@ -50,8 +51,10 @@ public class AlarmReceiver extends BroadcastReceiver {
                 context.startService(intentServicio);
             }
             Log.i(TAG, "AlarmReceiver: AlarmService arrancado");
+            Registro.agregar(context, "AlarmReceiver: AlarmService arrancado");
         } catch (Exception excepcion) {
             Log.e(TAG, "AlarmReceiver: no se pudo arrancar AlarmService", excepcion);
+            Registro.agregar(context, "AlarmReceiver: FALLÓ al arrancar AlarmService: " + excepcion);
         } finally {
             if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         }

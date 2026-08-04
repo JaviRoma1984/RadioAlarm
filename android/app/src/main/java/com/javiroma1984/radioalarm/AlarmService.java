@@ -45,6 +45,7 @@ public class AlarmService extends Service {
         String idAlarma = intent != null ? intent.getStringExtra(EXTRA_ID_ALARMA) : null;
         int idNotificacion = idAlarma != null ? idAlarma.hashCode() : 0;
         Log.i(TAG, "AlarmService.onStartCommand id=" + idAlarma);
+        Registro.agregar(this, "AlarmService.onStartCommand id=" + idAlarma);
 
         crearCanalNotificacion();
 
@@ -67,18 +68,22 @@ public class AlarmService extends Service {
             // aparte.
             startForeground(idNotificacion, aviso.build());
             Log.i(TAG, "AlarmService: startForeground OK");
+            Registro.agregar(this, "AlarmService: startForeground OK");
         } catch (Exception excepcion) {
             Log.e(TAG, "AlarmService: startForeground FALLÓ", excepcion);
+            Registro.agregar(this, "AlarmService: startForeground FALLÓ: " + excepcion);
         }
 
         try {
             startActivity(crearIntentAbrir(idAlarma));
             Log.i(TAG, "AlarmService: startActivity OK");
+            Registro.agregar(this, "AlarmService: startActivity OK");
         } catch (Exception excepcion) {
             // Restringido en este Android o fabricante en concreto: queda la
             // notificación como único camino, a la espera de que el usuario
             // la toque.
             Log.e(TAG, "AlarmService: startActivity FALLÓ", excepcion);
+            Registro.agregar(this, "AlarmService: startActivity FALLÓ: " + excepcion);
         }
 
         manejador.postDelayed(() -> {

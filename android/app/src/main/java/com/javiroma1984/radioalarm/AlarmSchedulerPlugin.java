@@ -66,8 +66,26 @@ public class AlarmSchedulerPlugin extends Plugin {
 
         AlarmManager.AlarmClockInfo info = new AlarmManager.AlarmClockInfo(cuando, crearPendingIntentMostrar());
         gestor.setAlarmClock(info, crearPendingIntentDisparo(id));
-        Log.i(TAG, "programar id=" + id + " cuando=" + new Date(cuando) + " (permiso alarmas exactas=" + puedeProgramarExactas() + ")");
 
+        String mensaje = "programar id=" + id + " cuando=" + new Date(cuando)
+            + " (permiso alarmas exactas=" + puedeProgramarExactas() + ")";
+        Log.i(TAG, mensaje);
+        Registro.agregar(getContext(), mensaje);
+
+        call.resolve();
+    }
+
+    /** El texto acumulado por Registro, para verlo desde la propia app sin adb. */
+    @PluginMethod
+    public void leerRegistro(PluginCall call) {
+        JSObject resultado = new JSObject();
+        resultado.put("texto", Registro.leer(getContext()));
+        call.resolve(resultado);
+    }
+
+    @PluginMethod
+    public void borrarRegistro(PluginCall call) {
+        Registro.borrar(getContext());
         call.resolve();
     }
 
