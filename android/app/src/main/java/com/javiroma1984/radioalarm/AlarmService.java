@@ -6,10 +6,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -32,7 +36,16 @@ public class AlarmService extends Service {
     /** Mismo tag en todo el codigo nativo, para filtrar en un solo sitio con adb logcat. */
     private static final String TAG = "RadioAlarm";
 
-    private static final String CANAL_ID = "radioalarm-alarmas";
+    /**
+     * "-2": los canales de notificación son inmutables una vez creados —a
+     * un móvil que ya tuviera instalada una versión anterior con el canal
+     * "radioalarm-alarmas" (sonido nulo a propósito), volver a llamar a
+     * createNotificationChannel con el mismo id no le cambia el sonido. Se
+     * usa un id nuevo para forzar un canal fresco con el sonido de verdad,
+     * borrando el viejo para no dejarlo huérfano en los ajustes del sistema.
+     */
+    private static final String CANAL_ID = "radioalarm-alarmas-2";
+    private static final String CANAL_ID_ANTIGUO = "radioalarm-alarmas";
     private static final String EXTRA_ID_ALARMA = "idAlarma";
 
     /** De sobra para que el intento de abrir la actividad surta efecto. */
@@ -120,9 +133,14 @@ public class AlarmService extends Service {
     }
 
     /**
-     * Sin sonido propio a propósito: el que suena es el de la app (tono,
-     * canción o radio, en bucle con rampa de volumen), no el de la
-     * notificación. Un sonido de sistema aquí se solaparía con ese.
+     * Lleva su propio sonido y vibración de alarma a propósito: en teoría
+     * quien suena es la app (tono, canción o radio en bucle), pero
+     * `startActivity` desde un servicio en segundo plano no siempre consigue
+     * traerla al frente sola (Android y, más aún, ColorOS pueden bloquearlo
+     * en silencio, sin lanzar ningún error). Si eso pasa, esta notificación
+     * es lo único que le queda al usuario para darse cuenta de que hay una
+     * alarma sonando —antes se dejaba muda a propósito, asumiendo que la app
+     * sí se abriría, y por eso no pasaba nada perceptible—.
      */
     private void crearCanalNotificacion() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
@@ -130,9 +148,19 @@ public class AlarmService extends Service {
         NotificationManager gestor = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (gestor == null) return;
 
+        gestor.deleteNotificationChannel(CANAL_ID_ANTIGUO);
+
+        Uri sonidoAlarma = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_ALARM);
+        if (sonidoAlarma == null) sonidoAlarma = Settings.System.DEFAULT_ALARM_ALERT_URI;
+
         NotificationChannel canal = new NotificationChannel(CANAL_ID, "Alarmas", NotificationManager.IMPORTANCE_HIGH);
         canal.setDescription("Avisos de alarmas de RadioAlarm");
-        canal.setSound(null, null);
+        canal.setSound(sonidoAlarma, new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build());
+        canal.enableVibration(true);
+        canal.setVibrationPattern(new long[] { 0, 800, 400, 800, 400, 800 });
         canal.setBypassDnd(true);
         gestor.createNotificationChannel(canal);
     }

@@ -338,6 +338,9 @@ public class AlarmSchedulerPlugin extends Plugin {
 
         if (getActivity() != null && getActivity().getIntent() != null) {
             String idAlarma = getActivity().getIntent().getStringExtra("idAlarma");
+            if (idAlarma != null) {
+                Registro.agregar(getContext(), "comprobarLanzamiento: la app arrancó por la alarma id=" + idAlarma);
+            }
             resultado.put("idAlarma", idAlarma);
             getActivity().getIntent().removeExtra("idAlarma");
         }
@@ -358,6 +361,7 @@ public class AlarmSchedulerPlugin extends Plugin {
         String idAlarma = intent.getStringExtra("idAlarma");
         if (idAlarma == null) return;
 
+        Registro.agregar(getContext(), "handleOnNewIntent: alarma relanzada con la app abierta id=" + idAlarma);
         intent.removeExtra("idAlarma");
 
         JSObject datos = new JSObject();
