@@ -51,6 +51,14 @@ export function crearSelectorCancion({ contenedor, obtener, establecer }) {
   const botonElegir = contenedor.querySelector('[data-parte="elegir"]');
   const inputArchivo = contenedor.querySelector('[data-parte="archivo"]');
 
+  /** Si la vista previa está sonando ahora mismo; ver `marcarSonando`. */
+  let sonando = false;
+
+  function marcarSonando(valorBoton) {
+    sonando = valorBoton;
+    botonEscuchar.textContent = valorBoton ? "Detener" : "Escuchar";
+  }
+
   function pintar() {
     const recurso = obtener();
 
@@ -82,6 +90,13 @@ export function crearSelectorCancion({ contenedor, obtener, establecer }) {
   }
 
   async function escuchar() {
+    // Pulsarlo mientras suena es lo mismo que pulsar «Detener»: mismo botón,
+    // dos estados —igual que el «Probar»/«Detener» de selectorEmisora.js—.
+    if (sonando) {
+      detener();
+      return;
+    }
+
     const recurso = obtener();
     if (!recurso) return;
 
@@ -92,7 +107,8 @@ export function crearSelectorCancion({ contenedor, obtener, establecer }) {
     }
 
     try {
-      await reproducirBlob(audio.blob);
+      await reproducirBlob(audio.blob, { onFinalizar: () => marcarSonando(false) });
+      marcarSonando(true);
     } catch {
       toast("No se pudo reproducir la canción", { tipo: "error" });
     }
@@ -101,9 +117,15 @@ export function crearSelectorCancion({ contenedor, obtener, establecer }) {
   function quitar() {
     if (!obtener()) return;
 
-    pararVistaPrevia();
+    detener();
     establecer(null);
     pintar();
+  }
+
+  /** Para llamar desde fuera (al salir de la vista, al cambiar de alarma…). */
+  function detener() {
+    pararVistaPrevia();
+    marcarSonando(false);
   }
 
   botonElegir.addEventListener("click", () => inputArchivo.click());
@@ -113,5 +135,5 @@ export function crearSelectorCancion({ contenedor, obtener, establecer }) {
 
   pintar();
 
-  return { pintar, detener: pararVistaPrevia };
+  return { pintar, detener };
 }

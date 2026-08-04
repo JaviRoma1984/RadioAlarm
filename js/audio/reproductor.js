@@ -97,14 +97,20 @@ export function pararVistaPrevia() {
 /**
  * Reproduce un archivo de audio ya guardado, una vez y al volumen normal.
  * @param {Blob} blob
+ * @param {{onFinalizar?: () => void}} [opciones] `onFinalizar` avisa cuando
+ *   termina sola —para que quien la puso a sonar pueda, por ejemplo, devolver
+ *   su botón de «Detener» a «Escuchar»—, no si se corta antes con
+ *   `pararVistaPrevia`.
  * @returns {Promise<void>} Se resuelve en cuanto empieza a sonar.
  */
-export async function reproducirBlob(blob) {
+export async function reproducirBlob(blob, { onFinalizar } = {}) {
   pararVistaPrevia();
 
   const audio = elementoAudio();
   urlObjeto = URL.createObjectURL(blob);
   audio.src = urlObjeto;
+
+  if (onFinalizar) audio.addEventListener("ended", onFinalizar, { once: true });
 
   await audio.play();
 }

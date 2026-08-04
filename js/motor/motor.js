@@ -271,6 +271,23 @@ export function activarAlarmaNativa(id) {
   if (alarma) encolar(alarma, new Date());
 }
 
+/**
+ * La llama la lista de alarmas al desactivar una desde su interruptor: si es
+ * justo la que está sonando (o esperando turno en la cola), la para en el
+ * acto en vez de dejarla sonando hasta que alguien llegue a la pantalla de
+ * sonando —el único otro sitio desde el que se puede— y la descarte allí.
+ *
+ * También avisa al nativo por si es él quien está sonando de verdad (ver
+ * AlarmService): `terminarDeSonar` solo para el sonido del propio JS.
+ */
+export function detenerSiSuena(id) {
+  const indice = cola.findIndex((entrada) => entrada.alarma.id === id);
+  if (indice !== -1) cola.splice(indice, 1);
+
+  if (actual?.alarma.id === id) terminarDeSonar();
+  detenerSonidoNativo();
+}
+
 export function iniciarMotor() {
   document.getElementById("btn-posponer-alarma")?.addEventListener("click", posponer);
   document.getElementById("btn-descartar-alarma")?.addEventListener("click", descartar);

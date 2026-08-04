@@ -15,6 +15,7 @@
 import { nombreTono } from "../datos/tonos.js";
 import { FUENTE, proximoDisparo, resumenRepeticion, tiempoHasta } from "../model/alarma.js";
 import { alCambiar, alternarActiva, borrarAlarma, listarAlarmas } from "../model/alarmas.js";
+import { detenerSiSuena } from "../motor/motor.js";
 import { abrirEditorAlarma, abrirEditorNuevo } from "./editor.js";
 import { configuracionSonido } from "./sonido.js";
 import { toast } from "./toast.js";
@@ -190,7 +191,12 @@ export function iniciarListaAlarmas() {
     if (!evento.target.matches(".interruptor__campo")) return;
 
     const id = evento.target.closest(".alarma")?.dataset.id;
-    if (id) alternarActiva(id); // el repositorio avisa y la lista se repinta
+    if (!id) return;
+
+    const actualizada = alternarActiva(id); // el repositorio avisa y la lista se repinta
+    // Desactivarla mientras suena (o espera turno) la para en el acto: no
+    // tiene sentido que sigan sonando cosas ya desactivadas.
+    if (actualizada && !actualizada.activa) detenerSiSuena(id);
   });
 
   document.getElementById("fab-crear")?.addEventListener("click", abrirEditorNuevo);
