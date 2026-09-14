@@ -7,14 +7,16 @@
  * de la app —ver
  * `tools/lib/iconos.mjs`, compartido con `generar-iconos.mjs`—.
  *
- * Android usa dos formatos a la vez:
- *   - Icono clásico (`ic_launcher`/`ic_launcher_round`): el dibujo completo,
- *     con asas, a un tamaño por densidad (48/72/96/144/192 px).
- *   - Icono adaptable (API 26+, `ic_launcher_foreground` + el fondo turquesa
- *     de `drawable/ic_launcher_background.xml`): solo la esfera y la aguja,
- *     sin asas —el sistema puede recortar cualquier cosa fuera de la "zona
- *     segura" central—, encogido al 85 % del lienzo (108/162/216/324/432 px)
- *     para quedar con margen de sobra dentro de esa zona.
+ * Android usa dos formatos a la vez, y los dos llevan el dibujo completo
+ * —círculo, aguja y asas—, que es el mismo del logotipo de la cabecera:
+ *   - Icono clásico (`ic_launcher`/`ic_launcher_round`): para API 24-25, con
+ *     su propio fondo blanco, a un tamaño por densidad (48/72/96/144/192 px).
+ *   - Icono adaptable (API 26+, `ic_launcher_foreground` sobre el color de
+ *     `values/ic_launcher_background.xml`): el primer plano va transparente,
+ *     porque el fondo lo pone el sistema por debajo. Su lienzo es de 108dp
+ *     pero solo los 66dp centrales están siempre visibles —el lanzador
+ *     recorta el resto con la forma que le dé la gana—, así que el dibujo se
+ *     encoge a esa proporción para que no se coman las asas.
  *
  * Se ejecuta una vez, a mano, cuando haga falta regenerarlos:
  *
@@ -24,7 +26,7 @@
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { codificarPng, renderizarIcono } from "./lib/iconos.mjs";
+import { BLANCO, codificarPng, renderizarIcono } from "./lib/iconos.mjs";
 
 const CARPETA_RES = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -36,8 +38,15 @@ const CARPETA_RES = join(
   "res",
 );
 
-/** Encoge el dibujo dentro del lienzo del icono adaptable, ver cabecera. */
-const MARGEN_ADAPTABLE = 0.85;
+/**
+ * Zona segura del icono adaptable: 66dp visibles de los 108dp del lienzo.
+ * Encoger el dibujo a esa proporción es lo que garantiza que las asas
+ * sobrevivan a cualquier forma de recorte del lanzador.
+ */
+const MARGEN_ADAPTABLE = 66 / 108;
+
+/** Margen del icono clásico, que no lo recorta nadie: solo aire alrededor. */
+const MARGEN_CLASICO = 0.9;
 
 const DENSIDADES = [
   { carpeta: "mipmap-mdpi", clasico: 48, adaptable: 108 },
@@ -57,13 +66,14 @@ function escribirPng(ruta, tamano, opciones) {
 for (const { carpeta, clasico, adaptable } of DENSIDADES) {
   const destino = join(CARPETA_RES, carpeta);
 
-  // Mismo dibujo completo (con asas) para el clásico y el redondo: a estos
-  // tamaños, y con lo poco frecuentes que son ya los lanzadores redondos de
-  // Android 7-7.1, no hace falta una segunda variante recortada a círculo.
-  escribirPng(join(destino, "ic_launcher.png"), clasico, { maskable: false });
-  escribirPng(join(destino, "ic_launcher_round.png"), clasico, { maskable: false });
+  // Mismo dibujo para el clásico y el redondo: a estos tamaños, y con lo poco
+  // frecuentes que son ya los lanzadores redondos de Android 7-7.1, no hace
+  // falta una segunda variante recortada a círculo.
+  const opcionesClasico = { fondo: BLANCO, radioRelativo: MARGEN_CLASICO };
+  escribirPng(join(destino, "ic_launcher.png"), clasico, opcionesClasico);
+  escribirPng(join(destino, "ic_launcher_round.png"), clasico, opcionesClasico);
   escribirPng(join(destino, "ic_launcher_foreground.png"), adaptable, {
-    maskable: true,
+    fondo: null,
     radioRelativo: MARGEN_ADAPTABLE,
   });
 }

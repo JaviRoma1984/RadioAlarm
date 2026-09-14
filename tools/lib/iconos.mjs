@@ -101,12 +101,6 @@ export function codificarPng(ancho, alto, rgba) {
 /*  Geometría                                                                 */
 /* -------------------------------------------------------------------------- */
 
-function dentroDeCirculo(x, y, cx, cy, radio) {
-  const dx = x - cx;
-  const dy = y - cy;
-  return dx * dx + dy * dy <= radio * radio;
-}
-
 /** Distancia de un punto al segmento a↔b, para dibujar las asas y la aguja. */
 function distanciaASegmento(px, py, ax, ay, bx, by) {
   const dx = bx - ax;
@@ -120,48 +114,72 @@ function distanciaASegmento(px, py, ax, ay, bx, by) {
   return Math.hypot(px - cercaX, py - cercaY);
 }
 
+const TRANSPARENTE = [0, 0, 0, 0];
+
+/**
+ * El logotipo, con las mismas coordenadas que el SVG de la cabecera en
+ * `index.html` —un `viewBox` de 24×24, trazo de grosor 2—, para que el icono
+ * de la app y el que se ve dentro de ella sean literalmente el mismo dibujo:
+ *
+ *     <path d="M4.5 4 7 6.2M19.5 4 17 6.2" stroke="amarillo" />
+ *     <circle cx="12" cy="13.5" r="7.5"   stroke="turquesa" />
+ *     <path  d="M12 10v3.5l2.25 1.5"      stroke="turquesa" />
+ *
+ * Es un dibujo de líneas, no de rellenos: el círculo es una circunferencia
+ * hueca, no un disco. Antes el icono era un cuadro turquesa macizo con una
+ * esfera blanca dentro, que no se parecía al logotipo más que de lejos.
+ */
+const DISENO = {
+  /** Lado del `viewBox` original. */
+  lado: 24,
+  /** Mitad del grosor de trazo (`stroke-width: 2`). */
+  trazo: 1,
+  circulo: { cx: 12, cy: 13.5, r: 7.5 },
+  aguja: [
+    { ax: 12, ay: 10, bx: 12, by: 13.5 },
+    { ax: 12, ay: 13.5, bx: 14.25, by: 15 },
+  ],
+  asas: [
+    { ax: 4.5, ay: 4, bx: 7, by: 6.2 },
+    { ax: 19.5, ay: 4, bx: 17, by: 6.2 },
+  ],
+  /** Caja que ocupa el dibujo con su trazo, para centrarlo y escalarlo. */
+  centroX: 12,
+  centroY: 12.5,
+  alto: 19,
+};
+
 /**
  * Color del icono en el punto lógico `(x, y)`, con el lienzo de `tamano`.
- * @param {boolean} maskable Si es `true`, se omiten las asas: en un icono
- *   adaptable (Android o PWA) puede recortar cualquier cosa fuera del
- *   círculo central de seguridad, y las asas sobresalen de esa zona a
- *   propósito —son parte del gesto de "despertador de mesa" del logotipo—.
+ *
+ * El punto se lleva primero al espacio del `viewBox` de 24×24, y ahí se
+ * compara contra la geometría del logotipo: así las proporciones son las del
+ * SVG y no hay que recalcularlas por tamaño.
+ *
+ * @param {number[]|null} fondo Color de relleno del lienzo, o `null` para
+ *   dejarlo transparente —lo que necesita el primer plano de un icono
+ *   adaptable de Android, que pone su fondo por debajo—.
  */
-function colorEnPunto(x, y, tamano, maskable) {
-  const centro = tamano / 2;
-  const radioEsfera = tamano * 0.3;
+function colorEnPunto(x, y, tamano, fondo) {
+  const escala = tamano / DISENO.alto;
+  const dx = (x - tamano / 2) / escala + DISENO.centroX;
+  const dy = (y - tamano / 2) / escala + DISENO.centroY;
 
-  // Aguja: del centro hacia la 1 en punto, como en el logotipo de la cabecera.
-  const largoAguja = radioEsfera * 0.62;
-  const anguloAguja = -Math.PI / 3; // -60°: arriba y a la derecha
-  const puntaAgujaX = centro + Math.cos(anguloAguja) * largoAguja;
-  const puntaAgujaY = centro + Math.sin(anguloAguja) * largoAguja;
-  const grosorAguja = tamano * 0.028;
-
-  if (distanciaASegmento(x, y, centro, centro, puntaAgujaX, puntaAgujaY) <= grosorAguja) {
-    return TURQUESA;
+  for (const asa of DISENO.asas) {
+    if (distanciaASegmento(dx, dy, asa.ax, asa.ay, asa.bx, asa.by) <= DISENO.trazo) return AMARILLO;
   }
 
-  if (dentroDeCirculo(x, y, centro, centro, radioEsfera)) {
-    return BLANCO;
-  }
+  // Circunferencia, no disco: solo pinta el anillo del grosor del trazo.
+  const { cx, cy, r } = DISENO.circulo;
+  if (Math.abs(Math.hypot(dx - cx, dy - cy) - r) <= DISENO.trazo) return TURQUESA;
 
-  if (!maskable) {
-    const grosorAsa = tamano * 0.045;
-    // Mismo ángulo que las patas del logotipo de la cabecera (M4.5 4 7 6.2).
-    const asas = [
-      { ax: centro - radioEsfera * 1.28, ay: centro - radioEsfera * 1.55, bx: centro - radioEsfera * 0.62, by: centro - radioEsfera * 0.98 },
-      { ax: centro + radioEsfera * 1.28, ay: centro - radioEsfera * 1.55, bx: centro + radioEsfera * 0.62, by: centro - radioEsfera * 0.98 },
-    ];
-
-    for (const asa of asas) {
-      if (distanciaASegmento(x, y, asa.ax, asa.ay, asa.bx, asa.by) <= grosorAsa) {
-        return AMARILLO;
-      }
+  for (const tramo of DISENO.aguja) {
+    if (distanciaASegmento(dx, dy, tramo.ax, tramo.ay, tramo.bx, tramo.by) <= DISENO.trazo) {
+      return TURQUESA;
     }
   }
 
-  return TURQUESA;
+  return fondo ?? TRANSPARENTE;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -172,12 +190,14 @@ const SUPERMUESTREO = 4;
 
 /**
  * @param {number} tamano Lado del lienzo cuadrado, en píxeles.
- * @param {{maskable?: boolean, radioRelativo?: number}} [opciones]
- *   `radioRelativo` reescala el dibujo dentro del lienzo sin cambiar `tamano`
- *   —lo usan los iconos adaptables de Android, cuyo lienzo (108dp) es más
- *   grande que la "zona segura" (66dp) que el sistema deja siempre visible—.
+ * @param {{fondo?: number[]|null, radioRelativo?: number}} [opciones]
+ *   `fondo` rellena el lienzo por detrás del dibujo (`null` lo deja
+ *   transparente). `radioRelativo` reescala el dibujo dentro del lienzo sin
+ *   cambiar `tamano` —lo usan los iconos adaptables de Android, cuyo lienzo
+ *   (108dp) es más grande que la "zona segura" (66dp) que el sistema deja
+ *   siempre visible—.
  */
-export function renderizarIcono(tamano, { maskable = false, radioRelativo = 1 } = {}) {
+export function renderizarIcono(tamano, { fondo = null, radioRelativo = 1 } = {}) {
   const grande = tamano * SUPERMUESTREO;
   const rgba = new Uint8Array(tamano * tamano * 4);
   // radioRelativo < 1 encoge el dibujo dentro del lienzo, centrado, dejando
@@ -204,7 +224,7 @@ export function renderizarIcono(tamano, { maskable = false, radioRelativo = 1 } 
             (xGrande / grande) * tamano - desplazamiento,
             (yGrande / grande) * tamano - desplazamiento,
             tamanoLogico,
-            maskable,
+            null,
           );
           r += cr;
           g += cg;
@@ -213,12 +233,28 @@ export function renderizarIcono(tamano, { maskable = false, radioRelativo = 1 } 
         }
       }
 
+      // Las muestras son o totalmente opacas o totalmente transparentes, así
+      // que la media de r/g/b ya es el color premultiplicado por alfa. Hay que
+      // tratarlo como tal: dividir por el alfa al guardar (o componer sobre el
+      // fondo) en vez de escribirlo en crudo, que es lo que oscurecería los
+      // bordes del trazo al mezclarlos con el negro del transparente.
       const muestras = SUPERMUESTREO * SUPERMUESTREO;
       const indice = (ty * tamano + tx) * 4;
-      rgba[indice] = Math.round(r / muestras);
-      rgba[indice + 1] = Math.round(g / muestras);
-      rgba[indice + 2] = Math.round(b / muestras);
-      rgba[indice + 3] = Math.round(a / muestras);
+      const alfa = a / muestras;
+      const premultiplicado = [r / muestras, g / muestras, b / muestras];
+
+      if (fondo) {
+        const opacidad = alfa / 255;
+        for (let canal = 0; canal < 3; canal += 1) {
+          rgba[indice + canal] = Math.round(premultiplicado[canal] + fondo[canal] * (1 - opacidad));
+        }
+        rgba[indice + 3] = 255;
+      } else {
+        for (let canal = 0; canal < 3; canal += 1) {
+          rgba[indice + canal] = alfa === 0 ? 0 : Math.round((premultiplicado[canal] * 255) / alfa);
+        }
+        rgba[indice + 3] = Math.round(alfa);
+      }
     }
   }
 

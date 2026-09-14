@@ -15,23 +15,29 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { codificarPng, renderizarIcono } from "./lib/iconos.mjs";
+import { BLANCO, codificarPng, renderizarIcono } from "./lib/iconos.mjs";
 
 const CARPETA_ICONOS = join(dirname(fileURLToPath(import.meta.url)), "..", "icons");
 
+/** Zona segura de un icono maskable: el sistema recorta todo lo de fuera. */
+const MARGEN_MASKABLE = 0.66;
+
+// Todos llevan fondo blanco: un icono de app no puede ir transparente, o
+// queda flotando sobre lo que haya detrás. El `maskable` solo se diferencia en
+// que encoge el dibujo para sobrevivir al recorte.
 const ICONOS = [
   { archivo: "favicon-16.png", tamano: 16 },
   { archivo: "favicon-32.png", tamano: 32 },
   { archivo: "apple-touch-icon.png", tamano: 180 },
   { archivo: "icon-192.png", tamano: 192 },
   { archivo: "icon-512.png", tamano: 512 },
-  { archivo: "icon-512-maskable.png", tamano: 512, maskable: true },
+  { archivo: "icon-512-maskable.png", tamano: 512, radioRelativo: MARGEN_MASKABLE },
 ];
 
 mkdirSync(CARPETA_ICONOS, { recursive: true });
 
-for (const { archivo, tamano, maskable } of ICONOS) {
-  const rgba = renderizarIcono(tamano, { maskable });
+for (const { archivo, tamano, radioRelativo = 0.9 } of ICONOS) {
+  const rgba = renderizarIcono(tamano, { fondo: BLANCO, radioRelativo });
   const png = codificarPng(tamano, tamano, rgba);
   writeFileSync(join(CARPETA_ICONOS, archivo), png);
   console.log(`${archivo}  (${tamano}×${tamano}, ${png.length} bytes)`);
