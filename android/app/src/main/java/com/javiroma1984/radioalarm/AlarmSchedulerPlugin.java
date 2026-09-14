@@ -87,7 +87,8 @@ public class AlarmSchedulerPlugin extends Plugin {
         String mensaje = "programar id=" + id + " cuando=" + new Date(cuando) + " tipo=" + tipoSonido
             + " (alarmas exactas=" + puedeProgramarExactas()
             + ", exención batería=" + tieneExencionBateriaConcedida()
-            + ", pantalla completa=" + puedeUsarPantallaCompleta() + ")";
+            + ", pantalla completa=" + puedeUsarPantallaCompleta()
+            + ", superposición=" + puedeSuperponerse() + ")";
         Log.i(TAG, mensaje);
         Registro.agregar(getContext(), mensaje);
 
@@ -140,7 +141,16 @@ public class AlarmSchedulerPlugin extends Plugin {
         call.resolve();
     }
 
-    /** El texto acumulado por Registro, para verlo desde la propia app sin adb. */
+    /**
+     * El texto acumulado por Registro.
+     *
+     * La app ya no lo enseña por ninguna pantalla —el panel de Diagnóstico de
+     * Opciones de sonido se quitó, porque el registro es para depurar, no para
+     * el usuario—; se lee de fuera, con
+     * `adb shell run-as com.javiroma1984.radioalarm cat shared_prefs/radioalarm-registro.xml`.
+     * Estos dos métodos se quedan como la forma de sacarlo sin depender de que
+     * la build sea depurable, que es lo que hace posible ese `run-as`.
+     */
     @PluginMethod
     public void leerRegistro(PluginCall call) {
         JSObject resultado = new JSObject();
@@ -271,6 +281,49 @@ public class AlarmSchedulerPlugin extends Plugin {
     }
 
     /**
+     * «Mostrar sobre otras aplicaciones» (`SYSTEM_ALERT_WINDOW`).
+     *
+     * Es lo que deja a `AlarmService` abrir la pantalla de alarma con el móvil
+     * **desbloqueado y en uso**. Con la pantalla bloqueada no hace falta: ahí
+     * la notificación de pantalla completa la abre el propio sistema. Pero
+     * desbloqueado Android la degrada a notificación flotante, y entonces el
+     * `startActivity` del servicio se topa con las restricciones de arranque
+     * de actividades en segundo plano —en logcat aparece como
+     * `Background activity launch blocked!`, mientras que `startActivity` no
+     * llega a lanzar ninguna excepción, así que desde Java parece que ha ido
+     * bien—. Tener este permiso es una de las exenciones oficiales de esa
+     * restricción.
+     *
+     * Sin él la alarma no se queda muda —suena igual—, pero la pantalla de
+     * alarma no se abre sola y solo aparece la notificación, que desde que se
+     * le quitó el botón «Descartar» ya no sirve para pararla: habría que abrir
+     * la app a mano. Por eso este permiso entra en el flujo junto a los demás,
+     * y no como un extra opcional.
+     */
+    @PluginMethod
+    public void tienePermisoSuperposicion(PluginCall call) {
+        JSObject resultado = new JSObject();
+        resultado.put("concedido", puedeSuperponerse());
+        call.resolve(resultado);
+    }
+
+    @PluginMethod
+    public void solicitarPermisoSuperposicion(PluginCall call) {
+        if (!puedeSuperponerse()) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+            intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+        }
+
+        call.resolve();
+    }
+
+    private boolean puedeSuperponerse() {
+        return Settings.canDrawOverlays(getContext());
+    }
+
+    /**
      * A diferencia de los otros dos, este es un permiso "normal" (no de
      * acceso especial): se pide con el diálogo de siempre del sistema, no
      * abriendo los ajustes. Sin concederlo, `NotificationManager.notify()`
@@ -392,32 +445,69 @@ public class AlarmSchedulerPlugin extends Plugin {
     }
 
     /**
+     * El id que lanzó la app, a la espera de que el JS lo recoja.
+     *
+     * `AlarmService` abre la app por dos caminos a la vez —su `startActivity`
+     * directo y el `setFullScreenIntent` de su notificación—, y el segundo
+     * llega como `onNewIntent` mientras el JS que arrancó el primero todavía
+     * se está cargando. Sin guardarlo aquí, ese id se perdía por los dos
+     * lados a la vez: el evento se emitía sin ningún oyente registrado
+     * todavía (y Capacitor lo descarta), y el `removeExtra` de más abajo
+     * borraba el dato que `comprobarLanzamiento` iba a leer un instante
+     * después. El resultado era la app abriéndose en su pantalla normal, con
+     * la alarma sonando de fondo y sin forma de pararla.
+     */
+    private String idPendiente;
+
+    /** Cuándo se guardó `idPendiente`; ver `VALIDEZ_PENDIENTE_MS`. */
+    private long idPendienteEn;
+
+    /**
+     * Cuánto vale un `idPendiente` sin consumir. Si el JS ya recogió el id
+     * por el evento, el pendiente se queda ahí sin que nadie lo borre; sin
+     * este límite, una recarga posterior del WebView lo leería y volvería a
+     * abrir la pantalla de una alarma descartada hace rato. Un minuto cubre
+     * de sobra el hueco entre que la actividad se crea y su JS arranca.
+     */
+    private static final long VALIDEZ_PENDIENTE_MS = 60000;
+
+    /**
      * Si la app se ha abierto porque una notificación de alarma la lanzó
      * (pantalla bloqueada o app cerrada), devuelve el id de esa alarma y lo
      * consume: una llamada posterior ya no lo repite, así que al pasar a
      * segundo plano y reabrir la app "a mano" no se vuelve a disparar sola.
+     *
+     * Mira primero `idPendiente` (lo que dejó `handleOnNewIntent`) y solo
+     * después el extra del intent, que es el camino del arranque en frío.
      */
     @PluginMethod
     public void comprobarLanzamiento(PluginCall call) {
         JSObject resultado = new JSObject();
+        String idAlarma = null;
 
-        if (getActivity() != null && getActivity().getIntent() != null) {
-            String idAlarma = getActivity().getIntent().getStringExtra("idAlarma");
-            if (idAlarma != null) {
-                Registro.agregar(getContext(), "comprobarLanzamiento: la app arrancó por la alarma id=" + idAlarma);
-            }
-            resultado.put("idAlarma", idAlarma);
+        if (idPendiente != null && System.currentTimeMillis() - idPendienteEn < VALIDEZ_PENDIENTE_MS) {
+            idAlarma = idPendiente;
+        }
+        idPendiente = null;
+
+        if (idAlarma == null && getActivity() != null && getActivity().getIntent() != null) {
+            idAlarma = getActivity().getIntent().getStringExtra("idAlarma");
             getActivity().getIntent().removeExtra("idAlarma");
         }
 
+        if (idAlarma != null) {
+            Registro.agregar(getContext(), "comprobarLanzamiento: la app arrancó por la alarma id=" + idAlarma);
+        }
+
+        resultado.put("idAlarma", idAlarma);
         call.resolve(resultado);
     }
 
     /**
-     * La actividad ya existía (la app estaba abierta) y una alarma nativa
-     * acaba de lanzarla de nuevo: a diferencia de un arranque en frío, esto
-     * no pasa por `load()` ni por `comprobarLanzamiento()`, así que se avisa
-     * al JS directamente con un evento.
+     * La actividad ya existía y una alarma nativa acaba de lanzarla de nuevo.
+     * Puede ser la app que estaba abierta de verdad, o —lo más habitual— el
+     * segundo de los dos lanzamientos de `AlarmService` sobre una actividad
+     * que acaba de crearse y cuyo JS aún está arrancando (ver `idPendiente`).
      */
     @Override
     protected void handleOnNewIntent(Intent intent) {
@@ -428,10 +518,14 @@ public class AlarmSchedulerPlugin extends Plugin {
 
         Registro.agregar(getContext(), "handleOnNewIntent: alarma relanzada con la app abierta id=" + idAlarma);
         intent.removeExtra("idAlarma");
+        idPendiente = idAlarma;
+        idPendienteEn = System.currentTimeMillis();
 
         JSObject datos = new JSObject();
         datos.put("idAlarma", idAlarma);
-        notifyListeners("alarmaLanzada", datos);
+        // Retenido hasta que alguien lo consuma: así el evento sobrevive a
+        // que el oyente del JS se registre después de haberlo emitido.
+        notifyListeners("alarmaLanzada", datos, true);
     }
 
     private boolean puedeProgramarExactas() {

@@ -151,6 +151,20 @@ const PERMISOS_NATIVOS = [
     solicitar: (nativo) => nativo.solicitarPermisoPantallaCompleta(),
   },
   {
+    // El compañero del anterior, para el caso contrario: «Pantalla completa»
+    // abre la alarma con el móvil bloqueado, y este con el móvil desbloqueado
+    // y en uso —ahí Android degrada la notificación de pantalla completa a
+    // notificación flotante, y sin este permiso bloquea que la app se abra
+    // sola—. Hacen falta los dos para que la pantalla de alarma salga siempre.
+    etiqueta: "Mostrar sobre otras aplicaciones",
+    tiene: (nativo) => nativo.tienePermisoSuperposicion(),
+    solicitar: (nativo) => nativo.solicitarPermisoSuperposicion(),
+    instruccion:
+      "Falta: Mostrar sobre otras aplicaciones. Sin este permiso, si la alarma suena con el " +
+      "móvil desbloqueado, solo verás una notificación arriba en vez de la pantalla de alarma. " +
+      "Pulsa el botón y activa el interruptor que te muestre el sistema.",
+  },
+  {
     etiqueta: "Ignorar la optimización de batería",
     tiene: (nativo) => nativo.tieneExencionBateria(),
     solicitar: (nativo) => nativo.solicitarExencionBateria(),
@@ -211,33 +225,6 @@ async function actualizarAvisoPermiso() {
   aviso.hidden = true;
 }
 
-/**
- * Registro de la última alarma nativa, paso a paso. Solo en la app de
- * Android: es una herramienta de depuración para ver dónde se rompe la
- * cadena cuando una alarma no suena con la app cerrada, sin tener que
- * conectar el móvil a un ordenador.
- */
-async function actualizarDiagnostico() {
-  const nativo = pluginAlarma();
-  const panel = document.getElementById("panel-diagnostico");
-  const texto = document.getElementById("diagnostico-texto");
-  if (!panel) return;
-
-  if (!nativo) {
-    panel.hidden = true;
-    return;
-  }
-
-  panel.hidden = false;
-
-  try {
-    const { texto: contenido } = await nativo.leerRegistro();
-    if (texto) texto.textContent = contenido;
-  } catch {
-    if (texto) texto.textContent = "(no se pudo leer el registro)";
-  }
-}
-
 /** Recarga el borrador desde lo guardado y repinta. Se llama al abrir la vista. */
 export function refrescarSonido() {
   borrador = configuracionSonido();
@@ -248,7 +235,6 @@ export function refrescarSonido() {
   selectorCancion.pintar();
   selectorEmisora.pintar();
   actualizarAvisoPermiso();
-  actualizarDiagnostico();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -317,13 +303,6 @@ export function iniciarSonido() {
     actualizarAvisoPermiso();
   });
 
-  document.getElementById("btn-diagnostico-actualizar")?.addEventListener("click", actualizarDiagnostico);
-
-  document.getElementById("btn-diagnostico-borrar")?.addEventListener("click", async () => {
-    await pluginAlarma()?.borrarRegistro().catch(() => {});
-    actualizarDiagnostico();
-  });
-
   // Al abrir la vista se descarta cualquier borrador anterior; al salir de ella
   // se corta cualquier tono de muestra que siguiera sonando.
   document.addEventListener("vista:cambiada", (evento) => {
@@ -333,12 +312,7 @@ export function iniciarSonido() {
 
   // Concedido el permiso desde los ajustes del sistema (fuera de la app), al
   // volver a ella conviene refrescar el aviso sin esperar a cambiar de vista.
-  // También sirve para ver el registro recién actualizado si la alarma
-  // acaba de sonar mientras la app estaba en segundo plano.
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      actualizarAvisoPermiso();
-      actualizarDiagnostico();
-    }
+    if (document.visibilityState === "visible") actualizarAvisoPermiso();
   });
 }

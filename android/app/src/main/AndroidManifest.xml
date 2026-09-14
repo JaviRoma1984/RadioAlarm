@@ -69,6 +69,13 @@
     <!-- La notificación de pantalla completa que despierta el dispositivo. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Abrir la pantalla de alarma con el móvil DESBLOQUEADO y en uso. Con la
+         pantalla bloqueada basta la notificación de pantalla completa, que
+         abre el sistema por su cuenta; desbloqueado, Android la degrada a
+         notificación flotante y el startActivity de AlarmService choca con las
+         restricciones de arranque de actividades en segundo plano. Tener este
+         permiso es una de las exenciones oficiales de esa restricción. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- Reprogramar tras reiniciar el dispositivo. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- El wake lock breve de AlarmReceiver y el largo de motor/vigilia.js. -->

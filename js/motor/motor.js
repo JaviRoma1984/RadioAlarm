@@ -190,9 +190,35 @@ function encolar(alarma, cuando, extra = {}) {
   if (alarma.repeticion === REPETICION.UNA_VEZ) marcarComoSonada(alarma.id);
 
   const perdida = Date.now() - cuando.getTime() > UMBRAL_PERDIDA_MS;
-  cola.push({ alarma, cuando, perdida, vecesPospuesta: extra.vecesPospuesta ?? 0 });
+  cola.push({
+    alarma,
+    cuando,
+    perdida,
+    vecesPospuesta: extra.vecesPospuesta ?? 0,
+    desdeNativo: extra.desdeNativo ?? false,
+  });
 
   avanzarCola();
+}
+
+/**
+ * ¿Debe seguir sonando el nativo en vez de tomar el relevo el JS?
+ *
+ * Solo para un tono lanzado por la alarma nativa. El sintetizador va por Web
+ * Audio, y un `AudioContext` no arranca sin un gesto previo del usuario: si la
+ * alarma salta con la app cerrada, ese gesto no ha existido nunca y el tono se
+ * queda mudo —se oía un instante el WAV del nativo y nada más, justo hasta que
+ * el JS lo mandaba parar—. `AlarmService` ya reproduce ese mismo tono en
+ * bucle, por el canal de alarma y con su rampa, así que lo sensato es no
+ * quitárselo.
+ *
+ * La canción y la emisora no tienen este problema: van por un elemento
+ * `<audio>`, que el WebView sí deja arrancar sin gesto previo. Y un pospuesto
+ * tampoco: para llegar a él hay que pulsar «Posponer», y ese toque ya
+ * desbloquea el audio para el resto de la sesión (ver `audio/desbloqueo.js`).
+ */
+function loLlevaElNativo(entrada) {
+  return entrada.desdeNativo && entrada.alarma.sonido.tipo === FUENTE.TONO;
 }
 
 function avanzarCola() {
@@ -200,17 +226,22 @@ function avanzarCola() {
 
   actual = cola.shift();
   encenderPantallaNativa();
-  detenerSonidoNativo();
+
+  const sonidoNativo = loLlevaElNativo(actual);
+  if (!sonidoNativo) detenerSonidoNativo();
+
   mostrarOverlay(actual);
   iniciarRelojEnPantalla();
   if (actual.alarma.vibracion) iniciarVibracion();
-  iniciarSonido(actual.alarma);
+  if (!sonidoNativo) iniciarSonido(actual.alarma);
 }
 
 function terminarDeSonar() {
   detenerVibracion();
   detenerRelojEnPantalla();
   detenerSonido();
+  // Puede estar sonando en el nativo y no en el JS; ver `loLlevaElNativo`.
+  detenerSonidoNativo();
   ocultarOverlay();
   actual = null;
   avanzarCola();
@@ -265,10 +296,18 @@ function tick() {
  * (Android, ver js/nativo.js): reutiliza `encolar` tal cual, así que se
  * comporta exactamente igual que si el tick la hubiera detectado ahora
  * mismo —cola, pospuesto, "una vez" que se autodesactiva, todo igual—.
+ *
+ * Idempotente a propósito: el mismo id llega por dos caminos —el evento
+ * `alarmaLanzada` retenido y `comprobarLanzamiento`, ver
+ * AlarmSchedulerPlugin—, y también puede coincidir con el tick del motor
+ * detectándola por su cuenta. Encolarla dos veces la haría sonar dos veces
+ * seguidas, una por cada aviso.
  */
 export function activarAlarmaNativa(id) {
+  if (yaEnJuego(id)) return;
+
   const alarma = obtenerAlarma(id);
-  if (alarma) encolar(alarma, new Date());
+  if (alarma) encolar(alarma, new Date(), { desdeNativo: true });
 }
 
 /**

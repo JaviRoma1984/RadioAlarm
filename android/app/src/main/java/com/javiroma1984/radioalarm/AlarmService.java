@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.io.File;
@@ -96,11 +97,11 @@ public class AlarmService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACCION_DETENER.equals(intent.getAction())) {
-            // Llega tanto del botón «Descartar» de la notificación como de
-            // detenerSonidoNativo() (el JS tomando el control): en los dos
-            // casos, parar es lo único que hace falta.
-            Log.i(TAG, "AlarmService: detenido (botón Descartar o JS)");
-            Registro.agregar(this, "AlarmService: detenido (botón Descartar o JS)");
+            // Siempre desde `detenerSonidoNativo()`: el JS tomando el control
+            // al mostrar la pantalla de alarma, o parando la alarma al
+            // posponer o descartar.
+            Log.i(TAG, "AlarmService: detenido por el JS");
+            Registro.agregar(this, "AlarmService: detenido por el JS");
             detenerReproduccion();
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
@@ -117,12 +118,20 @@ public class AlarmService extends Service {
 
         Log.i(TAG, "AlarmService.onStartCommand id=" + idAlarma + " tipo=" + tipo);
         Registro.agregar(this, "AlarmService.onStartCommand id=" + idAlarma + " tipo=" + tipo
-            + " (exención batería=" + tieneExencionBateria() + ", pantalla completa=" + tienePantallaCompleta() + ")");
+            + " (exención batería=" + tieneExencionBateria() + ", pantalla completa=" + tienePantallaCompleta()
+            + ", superposición=" + puedeSuperponerse() + ")");
 
         crearCanalNotificacion();
 
         PendingIntent pendingAbrir = crearPendingIntentAbrir(idAlarma, idNotificacion);
 
+        // Sin botón «Descartar»: la notificación existe porque todo servicio en
+        // primer plano necesita una, y porque es la que lleva el
+        // `setFullScreenIntent` que abre la alarma con el móvil bloqueado —no
+        // para parar nada—. Llegó a tener uno cuando la pantalla de alarma no
+        // se abría sola de forma fiable; ahora que sí lo hace en los cuatro
+        // escenarios, ofrecer dos formas de parar la misma alarma solo duplica
+        // la interfaz.
         NotificationCompat.Builder aviso = new NotificationCompat.Builder(this, CANAL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle("RadioAlarm")
@@ -131,13 +140,7 @@ public class AlarmService extends Service {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(pendingAbrir, true)
             .setContentIntent(pendingAbrir)
-            .setOngoing(true)
-            // Para poder parar la alarma con un toque aunque la actividad no
-            // llegue a abrirse sola —lo que en la práctica pasa a menudo con
-            // la app cerrada, sobre todo en ColorOS—: sin esto, la única
-            // forma de silenciarla sería que la pantalla de la app se
-            // abriera por su cuenta.
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Descartar", crearPendingIntentDescartar(idNotificacion));
+            .setOngoing(true);
 
         try {
             // Todo servicio en primer plano necesita publicar su
@@ -154,8 +157,15 @@ public class AlarmService extends Service {
 
         try {
             startActivity(crearIntentAbrir(idAlarma));
-            Log.i(TAG, "AlarmService: startActivity OK");
-            Registro.agregar(this, "AlarmService: startActivity OK");
+            // Cuidado al leer esto en el registro: que no salte una excepción
+            // NO quiere decir que la pantalla se haya abierto. Con el móvil
+            // desbloqueado y sin el permiso de superposición, Android bloquea
+            // el arranque en silencio —en logcat sale
+            // «Background activity launch blocked!»— y aquí parece que todo
+            // fue bien. Por eso se registra el estado del permiso al lado.
+            Log.i(TAG, "AlarmService: startActivity lanzado");
+            Registro.agregar(this, "AlarmService: startActivity lanzado"
+                + (puedeSuperponerse() ? "" : " (SIN superposición: el sistema puede bloquearlo si está desbloqueado)"));
         } catch (Exception excepcion) {
             // Restringido en este Android o fabricante en concreto: queda la
             // notificación como único camino, a la espera de que el usuario
@@ -315,6 +325,12 @@ public class AlarmService extends Service {
         return gestor != null && gestor.canUseFullScreenIntent();
     }
 
+    /** Ver `tienePermisoSuperposicion` en AlarmSchedulerPlugin: sin esto, con el
+     *  móvil desbloqueado el `startActivity` de abajo se bloquea en silencio. */
+    private boolean puedeSuperponerse() {
+        return Settings.canDrawOverlays(this);
+    }
+
     private Intent crearIntentAbrir(String idAlarma) {
         Intent intentAbrir = new Intent(this, MainActivity.class);
         intentAbrir.putExtra(EXTRA_ID_ALARMA, idAlarma);
@@ -329,19 +345,6 @@ public class AlarmService extends Service {
             this,
             codigoSolicitud,
             crearIntentAbrir(idAlarma),
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-    }
-
-    /** El botón «Descartar» de la notificación: reutiliza ACCION_DETENER tal cual. */
-    private PendingIntent crearPendingIntentDescartar(int codigoSolicitud) {
-        Intent intent = new Intent(this, AlarmService.class);
-        intent.setAction(ACCION_DETENER);
-
-        return PendingIntent.getService(
-            this,
-            codigoSolicitud,
-            intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
     }
