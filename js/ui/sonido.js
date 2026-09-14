@@ -259,7 +259,10 @@ function guardar() {
 
   if (guardarConfiguracionSonido(borrador)) {
     marcarCambios(false);
-    toast(`Guardado · tono ${nombreTono(borrador.tono)}`);
+    // Sin nombrar el tono: esta pantalla guarda tres cosas —tono, canción y
+    // emisora—, y anunciar siempre el tono daba a entender que era lo único
+    // que se había guardado, justo cuando lo que acababas de cambiar era otra.
+    toast("Cambios guardados");
     volverAlInicio();
     return;
   }
