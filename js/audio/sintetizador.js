@@ -24,6 +24,18 @@ const VOLUMEN_INICIAL_ALARMA = 0.05;
 /** Tono de respaldo si `sonarAlarmaTono` recibe un id que no existe. */
 const TONO_RESPALDO = "clasico";
 
+/**
+ * Silencio entre una repetición del tono y la siguiente, en segundos, al
+ * sonar como alarma. Sin él los ciclos se encadenan sin respirar y suena
+ * agobiante, sobre todo en los patrones cortos (el clásico dura 1,25 s).
+ *
+ * Tiene que valer lo mismo que `PAUSA_ENTRE_CICLOS` en
+ * `tools/generar-tonos.mjs`, que es donde se le añade esa misma cola de
+ * silencio al WAV que reproduce `AlarmService` cuando la alarma suena con la
+ * app cerrada. Si cambia aquí, hay que cambiarlo allí y regenerar los tonos.
+ */
+const PAUSA_ENTRE_CICLOS = 1;
+
 let contexto = null;
 let maestro = null;
 
@@ -365,7 +377,7 @@ export function sonarAlarmaTono(id, { rampaMs = 20000 } = {}) {
 
   const ciclo = () => {
     const duracion = patron(contexto.currentTime + 0.02);
-    temporizadorBucle = setTimeout(ciclo, duracion * 1000);
+    temporizadorBucle = setTimeout(ciclo, (duracion + PAUSA_ENTRE_CICLOS) * 1000);
   };
   ciclo();
 

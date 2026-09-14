@@ -42,6 +42,17 @@ const FRECUENCIA_MUESTREO = 44100;
 /** Igual que VOLUMEN_MAESTRO en sintetizador.js: volumen general de la síntesis. */
 const VOLUMEN_MAESTRO = 0.28;
 
+/**
+ * Igual que PAUSA_ENTRE_CICLOS en sintetizador.js: segundos de silencio entre
+ * una repetición del tono y la siguiente.
+ *
+ * Aquí se añade como cola de silencio al final del WAV. `AlarmService` lo
+ * reproduce con `setLooping(true)`, que encadena el final con el principio sin
+ * hueco ninguno, así que ese silencio grabado es lo único que separa una
+ * repetición de la siguiente.
+ */
+const PAUSA_ENTRE_CICLOS = 1;
+
 /* -------------------------------------------------------------------------- */
 /*  Síntesis por fase continua                                                */
 /* -------------------------------------------------------------------------- */
@@ -243,7 +254,10 @@ function duracionPatron(patron) {
 
 function renderizarPatron(patron) {
   const duracion = duracionPatron(patron);
-  const buffer = new Float64Array(Math.ceil(duracion * FRECUENCIA_MUESTREO));
+  // El buffer se dimensiona con la pausa incluida y el patrón solo escribe al
+  // principio: lo que queda detrás son ceros, es decir, el silencio que separa
+  // una vuelta del bucle de la siguiente.
+  const buffer = new Float64Array(Math.ceil((duracion + PAUSA_ENTRE_CICLOS) * FRECUENCIA_MUESTREO));
   patron(buffer, 0);
   return buffer;
 }
