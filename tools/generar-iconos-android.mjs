@@ -39,14 +39,17 @@ const CARPETA_RES = join(
 );
 
 /**
- * Zona segura del icono adaptable: 66dp visibles de los 108dp del lienzo.
- * Encoger el dibujo a esa proporción es lo que garantiza que las asas
- * sobrevivan a cualquier forma de recorte del lanzador.
+ * Cuánto del lienzo ocupa el dibujo en el icono adaptable.
+ *
+ * El suelo técnico son los 66dp de zona segura de los 108dp del lienzo
+ * (0,61): por debajo de eso, el recorte del lanzador no puede comerse nada.
+ * Se queda en 0,50 por estética, no por seguridad —a ras de la zona segura el
+ * despertador llegaba hasta el borde del círculo y se veía apretado—.
  */
-const MARGEN_ADAPTABLE = 66 / 108;
+const MARGEN_ADAPTABLE = 0.5;
 
-/** Margen del icono clásico, que no lo recorta nadie: solo aire alrededor. */
-const MARGEN_CLASICO = 0.9;
+/** Lo mismo para el icono clásico, al que no recorta nadie. */
+const MARGEN_CLASICO = 0.74;
 
 const DENSIDADES = [
   { carpeta: "mipmap-mdpi", clasico: 48, adaptable: 108 },

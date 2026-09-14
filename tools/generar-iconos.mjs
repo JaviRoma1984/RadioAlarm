@@ -19,8 +19,12 @@ import { BLANCO, codificarPng, renderizarIcono } from "./lib/iconos.mjs";
 
 const CARPETA_ICONOS = join(dirname(fileURLToPath(import.meta.url)), "..", "icons");
 
-/** Zona segura de un icono maskable: el sistema recorta todo lo de fuera. */
-const MARGEN_MASKABLE = 0.66;
+/**
+ * Cuánto del lienzo ocupa el dibujo en el icono maskable, que el sistema
+ * recorta con la forma que quiera. El suelo técnico es 0,66; se queda por
+ * debajo para que quede aire alrededor y no roce el borde del recorte.
+ */
+const MARGEN_MASKABLE = 0.55;
 
 // Todos llevan fondo blanco: un icono de app no puede ir transparente, o
 // queda flotando sobre lo que haya detrás. El `maskable` solo se diferencia en
@@ -36,7 +40,7 @@ const ICONOS = [
 
 mkdirSync(CARPETA_ICONOS, { recursive: true });
 
-for (const { archivo, tamano, radioRelativo = 0.9 } of ICONOS) {
+for (const { archivo, tamano, radioRelativo = 0.74 } of ICONOS) {
   const rgba = renderizarIcono(tamano, { fondo: BLANCO, radioRelativo });
   const png = codificarPng(tamano, tamano, rgba);
   writeFileSync(join(CARPETA_ICONOS, archivo), png);
