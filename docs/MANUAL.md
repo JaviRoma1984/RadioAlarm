@@ -175,7 +175,11 @@ Dos contadores con botones **−** y **+**:
 
 ### Guardar, volver y borrar
 
-- **Guardar cambios** — guarda la alarma y vuelve a la pantalla principal.
+- **Guardar cambios** — guarda la alarma, **la deja activada** y vuelve a la
+  pantalla principal. Da igual que estuviera desactivada antes: si la editas y
+  guardas, es que la quieres. Una alarma de «sonar una vez» que ya sonó vuelve
+  así a quedar lista para su próxima hora. Para guardar cambios y dejarla
+  apagada, desactívala después con su interruptor en la lista.
 - **Volver atrás** — vuelve sin guardar. Si tenías cambios pendientes, se descartan y te
   avisa de ello.
 - **Borrar esta alarma** — solo aparece al editar una alarma ya existente, nunca al crear

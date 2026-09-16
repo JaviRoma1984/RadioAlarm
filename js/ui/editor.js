@@ -276,6 +276,13 @@ function guardar() {
   borrador.sonido.tono = favoritos.tono;
   borrador.sonido.emisora = favoritos.emisora;
 
+  // Guardar desde el editor es decir «quiero esta alarma», así que siempre
+  // queda activada. Sin esto, una alarma apagada seguía apagada tras
+  // editarla —la que se desactivó a mano, y sobre todo la de «sonar una vez»,
+  // que se apaga sola al sonar—, y parecía que el cambio no había servido de
+  // nada. Para guardarla apagada está el interruptor de la lista.
+  borrador.activa = true;
+
   const guardada = guardarAlarma(borrador);
 
   if (!guardada) {
